@@ -152,3 +152,59 @@ The application supports the following environment variables:
 | `PORT` | `5000` | Server port number |
 | `DEBUG` | `False` | Enable debug mode (true/false) |
 
+## Docker
+
+### Building the Docker Image
+
+The application can be containerized using Docker. The included `Dockerfile` uses best practices including non-root user execution and multi-stage builds.
+
+**Build the image locally:**
+```bash
+docker build -t devops-info-service:latest .
+docker build -t devops-info-service:v1.0.0 .
+```
+
+### Running a Container
+
+**Run with default settings:**
+```bash
+docker run -p 5000:5000 devops-info-service:latest
+```
+
+**Run with custom environment variables:**
+```bash
+docker run -p 5000:8080 -e PORT=8080 devops-info-service:latest
+docker run -p 3000:5000 devops-info-service:latest  # Note: first port is host, second is container
+docker run -e DEBUG=true -p 5000:5000 devops-info-service:latest
+```
+
+**Run in background:**
+```bash
+docker run -d -p 5000:5000 --name devops-service devops-info-service:latest
+```
+
+### Pulling from Docker Hub
+
+Once published to Docker Hub, pull and run the image:
+
+```bash
+docker pull <username>/devops-info-service:latest
+docker run -p 5000:5000 <username>/devops-info-service:latest
+```
+
+### Verifying the Container
+
+Test that the containerized service is working:
+
+```bash
+curl http://localhost:5000/
+curl http://localhost:5000/health
+```
+
+### Image Details
+
+- **Base Image:** `python:3.13-slim`
+- **User:** `appuser` (non-root, UID 1000)
+- **Image Size:** ~133MB
+- **Port:** 5000 (configurable via environment variable)
+- **Health Check:** Included via HEALTHCHECK directive
