@@ -96,9 +96,11 @@ def get_uptime():
 
     return {
         'seconds': seconds,
-        'human': f"{hours} hour{
-            's' if hours != 1 else ''}, {minutes} minute{
-            's' if minutes != 1 else ''}"}
+        'human': (
+            f"{hours} hour{'s' if hours != 1 else ''}, "
+            f"{minutes} minute{'s' if minutes != 1 else ''}"
+        )
+    }
 
 
 def get_runtime_info():

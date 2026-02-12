@@ -1,0 +1,92 @@
+name: Go CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'app_go/**'
+      - '.github/workflows/go-ci.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'app_go/**'
+      - '.github/workflows/go-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_WORKDIR: app_go
+
+jobs:
+  lint-test:
+    name: Lint and test (Go)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache: true
+
+      - name: Check formatting
+        working-directory: ${{ env.GO_WORKDIR }}
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "gofmt needed";
+            gofmt -l .;
+            exit 1;
+          fi
+
+      - name: Lint (golangci-lint)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.61
+          working-directory: ${{ env.GO_WORKDIR }}
+
+      - name: Run tests
+        working-directory: ${{ env.GO_WORKDIR }}
+        run: go test ./...
+
+  docker:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    needs: lint-test
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set version
+        run: |
+          echo "VERSION=$(date -u +%Y.%m.%d)" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/devops-info-service-go" >> $GITHUB_ENV
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app_go
+          file: ./app_go/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ env.IMAGE_NAME }}:latest

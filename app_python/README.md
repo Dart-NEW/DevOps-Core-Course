@@ -1,5 +1,8 @@
 # DevOps Info Service
 
+[![Python CI](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg?branch=master)](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml)
+[![Coverage](https://codecov.io/gh/Dart-NEW/DevOps-Core-Course/branch/master/graph/badge.svg)](https://codecov.io/gh/Dart-NEW/DevOps-Core-Course)
+
 A simple web service that provides comprehensive information about itself and its runtime environment. Built with Flask as part of the DevOps Core Course.
 
 ## Overview
@@ -46,6 +49,11 @@ This service is designed to evolve throughout the course, with future enhancemen
    ```bash
    pip install -r requirements.txt
    ```
+
+5. **Install dev dependencies (tests + lint)**:
+  ```bash
+  pip install -r requirements-dev.txt
+  ```
 
 ## Running the Application
 
@@ -208,3 +216,12 @@ curl http://localhost:5000/health
 - **Image Size:** ~133MB
 - **Port:** 5000 (configurable via environment variable)
 - **Health Check:** Included via HEALTHCHECK directive
+
+## Testing
+
+Run linting and tests locally:
+
+```bash
+ruff check .
+pytest
+```
