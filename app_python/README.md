@@ -1,7 +1,6 @@
 # DevOps Info Service
 
-[![Python CI](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg?branch=master)](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml)
-[![Coverage](https://codecov.io/gh/Dart-NEW/DevOps-Core-Course/branch/master/graph/badge.svg)](https://codecov.io/gh/Dart-NEW/DevOps-Core-Course)
+[![Python CI](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg)](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml)
 
 A simple web service that provides comprehensive information about itself and its runtime environment. Built with Flask as part of the DevOps Core Course.
 

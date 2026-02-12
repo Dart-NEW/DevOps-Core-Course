@@ -41,7 +41,7 @@ pytest        # Passed - 8 passed, 100% coverage
 - Repository: https://hub.docker.com/r/dart0/devops-info-service-go
 - Tags: `latest` + `2026.02.12`
 
-**Status badge:** [![Python CI](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg?branch=master)](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml)
+**Status badge:** [![Python CI](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg)](https://github.com/Dart-NEW/DevOps-Core-Course/actions/workflows/python-ci.yml)
 
 ## 3. Best Practices Implemented
 
