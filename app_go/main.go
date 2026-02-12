@@ -82,6 +82,7 @@ type ErrorResponse struct {
 // getSystemInfo collects system information
 func getSystemInfo() System {
 	hostname, _ := os.Hostname()
+
 	return System{
 		Hostname:        hostname,
 		Platform:        runtime.GOOS,
@@ -110,6 +111,7 @@ func getPlatformVersion() string {
 func getUptimeHuman(seconds int) string {
 	hours := seconds / 3600
 	minutes := (seconds % 3600) / 60
+
 	return fmt.Sprintf("%d hour%s, %d minute%s",
 		hours, pluralize(hours),
 		minutes, pluralize(minutes))
@@ -120,6 +122,7 @@ func pluralize(count int) string {
 	if count == 1 {
 		return ""
 	}
+
 	return "s"
 }
 
@@ -148,6 +151,7 @@ func getClientIP(r *http.Request) string {
 	}
 
 	ip, _, _ = net.SplitHostPort(r.RemoteAddr)
+
 	return ip
 }
 
@@ -185,7 +189,10 @@ func jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
 	encoder.SetIndent("", "  ")
-	encoder.Encode(data)
+
+	if err := encoder.Encode(data); err != nil {
+		log.Printf("Error encoding JSON: %v", err)
+	}
 }
 
 // mainHandler serves the main endpoint
@@ -195,6 +202,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 			Error:   "Method Not Allowed",
 			Message: "Only GET method is supported",
 		}, http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -221,6 +229,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 			Error:   "Method Not Allowed",
 			Message: "Only GET method is supported",
 		}, http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -260,6 +269,7 @@ func main() {
 
 	portStr := os.Getenv("PORT")
 	port := 8080
+
 	if portStr != "" {
 		if p, err := strconv.Atoi(portStr); err == nil {
 			port = p
@@ -275,11 +285,12 @@ func main() {
 
 	// Custom 404 handler for undefined routes
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
+		switch r.URL.Path {
+		case "/":
 			mainHandler(w, r)
-		} else if r.URL.Path == "/health" {
+		case "/health":
 			healthHandler(w, r)
-		} else {
+		default:
 			notFoundHandler(w, r)
 		}
 	})
