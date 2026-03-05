@@ -1,14 +1,64 @@
 ---
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: true
-    cache_valid_time: 3600
+- name: Install baseline packages and timezone
+  block:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
 
-- name: Install common packages
-  ansible.builtin.apt:
-    name: "{{ common_packages }}"
-    state: present
+    - name: Install common packages
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
 
-- name: Set system timezone
-  community.general.timezone:
-    name: "{{ common_timezone }}"
+    - name: Set system timezone
+      community.general.timezone:
+        name: "{{ common_timezone }}"
+
+  rescue:
+    - name: Retry apt cache with fix-missing
+      ansible.builtin.command: apt-get update --fix-missing
+      changed_when: false
+
+    - name: Reinstall common packages after apt recovery
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
+
+  always:
+    - name: Log package block completion
+      ansible.builtin.lineinfile:
+        path: /tmp/ansible-common-role.log
+        create: true
+        mode: "0644"
+        line: "{{ ansible_date_time.iso8601 }} packages block finished"
+
+  become: true
+  tags:
+    - packages
+
+- name: Manage local users
+  block:
+    - name: Ensure managed users exist
+      ansible.builtin.user:
+        name: "{{ item.name | default(item) }}"
+        state: present
+        shell: "{{ item.shell | default('/bin/bash') }}"
+        groups: "{{ item.groups | default(omit) }}"
+        append: true
+      loop: "{{ common_managed_users }}"
+      loop_control:
+        label: "{{ item.name | default(item) }}"
+
+  always:
+    - name: Log user block completion
+      ansible.builtin.lineinfile:
+        path: /tmp/ansible-common-role.log
+        create: true
+        mode: "0644"
+        line: "{{ ansible_date_time.iso8601 }} users block finished"
+
+  when: common_managed_users | length > 0
+  become: true
+  tags:
+    - users

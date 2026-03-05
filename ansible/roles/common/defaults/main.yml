@@ -10,3 +10,11 @@ common_packages:
   - lsb-release
 
 common_timezone: "UTC"
+
+# Users managed by the common role. Keep empty to skip user creation.
+# Example:
+# common_managed_users:
+#   - name: deploy
+#     groups: [sudo, docker]
+#     shell: /bin/bash
+common_managed_users: []

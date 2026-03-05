@@ -1,0 +1,62 @@
+---
+- name: Include wipe tasks
+  ansible.builtin.include_tasks: wipe.yml
+  tags:
+    - web_app_wipe
+
+- name: Deploy application with Docker Compose
+  block:
+    - name: Validate required image variables
+      ansible.builtin.assert:
+        that:
+          - docker_image is defined
+          - docker_image | length > 0
+          - docker_tag is defined
+          - docker_tag | length > 0
+        fail_msg: "docker_image and docker_tag must be set"
+
+    - name: Create compose project directory
+      ansible.builtin.file:
+        path: "{{ compose_project_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Render docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml.j2
+        dest: "{{ compose_project_dir }}/docker-compose.yml"
+        mode: "0644"
+
+    - name: Pull and start services via Docker Compose v2
+      community.docker.docker_compose_v2:
+        project_src: "{{ compose_project_dir }}"
+        state: present
+        pull: always
+        recreate: auto
+
+    - name: Wait for application port
+      ansible.builtin.wait_for:
+        host: "127.0.0.1"
+        port: "{{ app_port }}"
+        delay: 2
+        timeout: 60
+
+    - name: Verify health endpoint
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ app_port }}{{ app_healthcheck_path }}"
+        method: GET
+        status_code: 200
+      register: app_health
+
+    - name: Show health endpoint response summary
+      ansible.builtin.debug:
+        msg: "Health check status={{ app_health.status }}"
+
+  rescue:
+    - name: Log deployment failure details
+      ansible.builtin.debug:
+        msg: "Compose deployment failed for {{ app_name }} in {{ compose_project_dir }}"
+
+  tags:
+    - app_deploy
+    - compose

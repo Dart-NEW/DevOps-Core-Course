@@ -1,0 +1,20 @@
+
+playbook: playbooks/deploy_python.yml
+
+  play #1 (webservers): Deploy Python Application	TAGS: []
+    tasks:
+      docker : Install apt dependencies for Docker repo	TAGS: [app_deploy, docker_install, python_app]
+      docker : Create apt keyrings directory	TAGS: [app_deploy, docker_install, python_app]
+      docker : Add Docker GPG key	TAGS: [app_deploy, docker_install, python_app]
+      docker : Add Docker apt repository	TAGS: [app_deploy, docker_install, python_app]
+      docker : Install Docker packages	TAGS: [app_deploy, docker_install, python_app]
+      docker : Add users to docker group	TAGS: [app_deploy, docker_config, python_app]
+      docker : Install python3-docker package	TAGS: [app_deploy, docker_config, python_app]
+      web_app : Include wipe tasks	TAGS: [app_deploy, python_app, web_app_wipe]
+      web_app : Validate required image variables	TAGS: [app_deploy, compose, python_app]
+      web_app : Create compose project directory	TAGS: [app_deploy, compose, python_app]
+      web_app : Render docker-compose.yml	TAGS: [app_deploy, compose, python_app]
+      web_app : Pull and start services via Docker Compose v2	TAGS: [app_deploy, compose, python_app]
+      web_app : Wait for application port	TAGS: [app_deploy, compose, python_app]
+      web_app : Verify health endpoint	TAGS: [app_deploy, compose, python_app]
+      web_app : Show health endpoint response summary	TAGS: [app_deploy, compose, python_app]
