@@ -45,7 +45,8 @@ jobs:
           pip install ansible ansible-lint
 
       - name: Install required Ansible collections
-        run: ansible-galaxy collection install -r ansible/requirements.yml
+        run: |
+          ansible-galaxy collection install community.general community.docker
 
       - name: Run ansible-lint
         run: |
@@ -70,7 +71,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install ansible
-          ansible-galaxy collection install -r ansible/requirements.yml
+          ansible-galaxy collection install community.general community.docker
 
       - name: Configure SSH access
         run: |
