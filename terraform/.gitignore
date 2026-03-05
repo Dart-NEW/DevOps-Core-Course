@@ -1,0 +1,20 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+
+# Sensitive material
+*.pem
+*.key
+*.p12
+*.json
+credentials

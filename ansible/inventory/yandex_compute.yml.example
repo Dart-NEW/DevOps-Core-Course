@@ -1,0 +1,20 @@
+---
+# Bonus: dynamic inventory (Yandex Cloud)
+# Requires collection: yandex.cloud
+plugin: yandex.cloud.yandex_compute
+auth_kind: oauth
+oauth_token: "{{ lookup('env', 'YC_OAUTH_TOKEN') }}"
+folder_id: "YOUR_FOLDER_ID"
+
+# Build Ansible host vars from cloud metadata
+compose:
+  ansible_host: network_interfaces[0].primary_v4_address.one_to_one_nat.address
+  ansible_user: "'ubuntu'"
+  ansible_python_interpreter: "'/usr/bin/python3'"
+
+# Keep only running instances
+filters:
+  - status == 'RUNNING'
+
+groups:
+  webservers: "'lab04' in (labels | default({}))"
