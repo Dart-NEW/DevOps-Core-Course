@@ -1,6 +1,6 @@
 name: Go CI
 
-on:
+"on":
   push:
     branches: [master, lab03]
     paths:

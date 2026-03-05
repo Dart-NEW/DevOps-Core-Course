@@ -4,30 +4,30 @@
   become: true
 
   tasks:
-    - name: Deploy Python app # noqa var-naming[no-role-prefix]
+    - name: Deploy Python App
       ansible.builtin.include_role:
         name: web_app
       vars:
-        app_name: devops-python
-        docker_image: "{{ dockerhub_username | default('your_dockerhub_username') }}/devops-info-service-python"
-        docker_tag: latest
-        app_port: 8000
-        app_internal_port: 5000
-        compose_project_dir: "/opt/devops-python"
+        web_app_name: devops-python
+        web_app_docker_image: "{{ dockerhub_username | default('your_dockerhub_username') }}/devops-info-service-python"
+        web_app_docker_tag: latest
+        web_app_port: 8000
+        web_app_internal_port: 5000
+        web_app_compose_project_dir: "/opt/devops-python"
       tags:
         - app_deploy
         - python_app
 
-    - name: Deploy bonus app # noqa var-naming[no-role-prefix]
+    - name: Deploy Bonus App
       ansible.builtin.include_role:
         name: web_app
       vars:
-        app_name: devops-go
-        docker_image: "{{ dockerhub_username | default('your_dockerhub_username') }}/devops-info-service-go"
-        docker_tag: latest
-        app_port: 8001
-        app_internal_port: 8080
-        compose_project_dir: "/opt/devops-go"
+        web_app_name: devops-go
+        web_app_docker_image: "{{ dockerhub_username | default('your_dockerhub_username') }}/devops-info-service-go"
+        web_app_docker_tag: latest
+        web_app_port: 8001
+        web_app_internal_port: 8080
+        web_app_compose_project_dir: "/opt/devops-go"
       tags:
         - app_deploy
         - bonus_app

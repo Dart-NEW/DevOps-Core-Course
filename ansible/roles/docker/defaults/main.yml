@@ -9,4 +9,3 @@ docker_packages:
 
 docker_users:
   - "{{ ansible_user | default('ubuntu') }}"
-

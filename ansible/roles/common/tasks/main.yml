@@ -1,5 +1,8 @@
 ---
 - name: Install baseline packages and timezone
+  become: true
+  tags:
+    - packages
   block:
     - name: Update apt cache
       ansible.builtin.apt:
@@ -17,8 +20,8 @@
 
   rescue:
     - name: Retry apt cache with fix-missing
-      ansible.builtin.command: apt-get update --fix-missing
-      changed_when: false
+      ansible.builtin.apt:
+        update_cache: true
 
     - name: Reinstall common packages after apt recovery
       ansible.builtin.apt:
@@ -33,11 +36,11 @@
         mode: "0644"
         line: "{{ ansible_date_time.iso8601 }} packages block finished"
 
+- name: Manage local users
+  when: common_managed_users | length > 0
   become: true
   tags:
-    - packages
-
-- name: Manage local users
+    - users
   block:
     - name: Ensure managed users exist
       ansible.builtin.user:
@@ -57,8 +60,3 @@
         create: true
         mode: "0644"
         line: "{{ ansible_date_time.iso8601 }} users block finished"
-
-  when: common_managed_users | length > 0
-  become: true
-  tags:
-    - users

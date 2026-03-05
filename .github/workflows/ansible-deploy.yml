@@ -1,6 +1,6 @@
 name: Ansible Deployment
 
-on:
+"on":
   push:
     branches: [main, master]
     paths:

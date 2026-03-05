@@ -1,5 +1,8 @@
 ---
 - name: Install Docker engine
+  become: true
+  tags:
+    - docker_install
   block:
     - name: Install apt dependencies for Docker repo
       ansible.builtin.apt:
@@ -24,7 +27,9 @@
 
     - name: Add Docker apt repository
       ansible.builtin.apt_repository:
-        repo: "deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: >-
+          deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
         state: present
         filename: docker
 
@@ -51,7 +56,9 @@
 
     - name: Retry Docker apt repository setup
       ansible.builtin.apt_repository:
-        repo: "deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: >-
+          deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
         state: present
         filename: docker
 
@@ -68,11 +75,10 @@
         state: started
         enabled: true
 
+- name: Configure Docker access and Python SDK
   become: true
   tags:
-    - docker_install
-
-- name: Configure Docker access and Python SDK
+    - docker_config
   block:
     - name: Add users to docker group
       ansible.builtin.user:
@@ -85,7 +91,3 @@
       ansible.builtin.apt:
         name: python3-docker
         state: present
-
-  become: true
-  tags:
-    - docker_config

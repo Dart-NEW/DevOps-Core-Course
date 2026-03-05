@@ -1,6 +1,6 @@
 name: Terraform CI
 
-on:
+"on":
   push:
     branches: [master, lab04]
     paths:
