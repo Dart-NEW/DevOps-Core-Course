@@ -4,7 +4,7 @@
   become: true
 
   tasks:
-    - name: Deploy Python app
+    - name: Deploy Python app # noqa var-naming[no-role-prefix]
       ansible.builtin.include_role:
         name: web_app
       vars:
@@ -18,7 +18,7 @@
         - app_deploy
         - python_app
 
-    - name: Deploy bonus app
+    - name: Deploy bonus app # noqa var-naming[no-role-prefix]
       ansible.builtin.include_role:
         name: web_app
       vars:

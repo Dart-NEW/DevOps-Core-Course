@@ -45,13 +45,17 @@ jobs:
           pip install ansible ansible-lint
 
       - name: Install required Ansible collections
+        working-directory: ansible
         run: |
           ansible-galaxy collection install community.general community.docker
 
       - name: Run ansible-lint
+        working-directory: ansible
+        env:
+          ANSIBLE_CONFIG: ansible.cfg
         run: |
-          ansible-lint ansible/playbooks/*.yml
-          ansible-lint ansible/roles
+          ansible-lint playbooks/*.yml
+          ansible-lint roles
 
   deploy:
     name: Deploy Application

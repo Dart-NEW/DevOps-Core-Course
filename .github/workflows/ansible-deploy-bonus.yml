@@ -43,13 +43,17 @@ jobs:
           pip install ansible ansible-lint
 
       - name: Install required Ansible collections
+        working-directory: ansible
         run: |
           ansible-galaxy collection install community.general community.docker
 
       - name: Run ansible-lint
+        working-directory: ansible
+        env:
+          ANSIBLE_CONFIG: ansible.cfg
         run: |
-          ansible-lint ansible/playbooks/deploy_bonus.yml
-          ansible-lint ansible/roles/web_app
+          ansible-lint playbooks/deploy_bonus.yml
+          ansible-lint roles/web_app
 
   deploy:
     name: Deploy Bonus Application
