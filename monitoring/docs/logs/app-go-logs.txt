@@ -1,0 +1,10 @@
+app-go-1  | 2026/03/11 06:37:58 {"client_ip":"127.0.0.1","event":"request_started","level":"INFO","message":"request_started","method":"GET","path":"/health","timestamp":"2026-03-11T06:37:58.236155526Z"}
+app-go-1  | 2026/03/11 06:37:58 {"client_ip":"127.0.0.1","event":"request_completed","level":"INFO","message":"request_completed","method":"GET","path":"/health","status_code":200,"timestamp":"2026-03-11T06:37:58.236255077Z"}
+app-go-1  | 2026/03/11 06:38:28 {"client_ip":"127.0.0.1","event":"request_started","level":"INFO","message":"request_started","method":"GET","path":"/health","timestamp":"2026-03-11T06:38:28.320868153Z"}
+app-go-1  | 2026/03/11 06:38:28 {"client_ip":"127.0.0.1","event":"request_completed","level":"INFO","message":"request_completed","method":"GET","path":"/health","status_code":200,"timestamp":"2026-03-11T06:38:28.320985801Z"}
+app-go-1  | 2026/03/11 06:38:58 {"client_ip":"127.0.0.1","event":"request_started","level":"INFO","message":"request_started","method":"GET","path":"/health","timestamp":"2026-03-11T06:38:58.394306143Z"}
+app-go-1  | 2026/03/11 06:38:58 {"client_ip":"127.0.0.1","event":"request_completed","level":"INFO","message":"request_completed","method":"GET","path":"/health","status_code":200,"timestamp":"2026-03-11T06:38:58.394398096Z"}
+app-go-1  | 2026/03/11 06:39:28 {"client_ip":"127.0.0.1","event":"request_started","level":"INFO","message":"request_started","method":"GET","path":"/health","timestamp":"2026-03-11T06:39:28.478529376Z"}
+app-go-1  | 2026/03/11 06:39:28 {"client_ip":"127.0.0.1","event":"request_completed","level":"INFO","message":"request_completed","method":"GET","path":"/health","status_code":200,"timestamp":"2026-03-11T06:39:28.47863598Z"}
+app-go-1  | 2026/03/11 06:39:58 {"client_ip":"127.0.0.1","event":"request_started","level":"INFO","message":"request_started","method":"GET","path":"/health","timestamp":"2026-03-11T06:39:58.56482593Z"}
+app-go-1  | 2026/03/11 06:39:58 {"client_ip":"127.0.0.1","event":"request_completed","level":"INFO","message":"request_completed","method":"GET","path":"/health","status_code":200,"timestamp":"2026-03-11T06:39:58.56496724Z"}
