@@ -15,6 +15,36 @@ import (
 
 var startTime = time.Now()
 
+type responseRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (recorder *responseRecorder) WriteHeader(statusCode int) {
+	recorder.statusCode = statusCode
+	recorder.ResponseWriter.WriteHeader(statusCode)
+}
+
+func logEvent(level string, message string, fields map[string]interface{}) {
+	payload := map[string]interface{}{
+		"timestamp": time.Now().UTC().Format(time.RFC3339Nano),
+		"level":     level,
+		"message":   message,
+	}
+
+	for key, value := range fields {
+		payload[key] = value
+	}
+
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("{\"timestamp\":%q,\"level\":\"ERROR\",\"message\":\"log_encoding_failed\"}", time.Now().UTC().Format(time.RFC3339Nano))
+		return
+	}
+
+	log.Println(string(encoded))
+}
+
 // Service metadata
 type Service struct {
 	Name        string `json:"name"`
@@ -191,7 +221,10 @@ func jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	encoder.SetIndent("", "  ")
 
 	if err := encoder.Encode(data); err != nil {
-		log.Printf("Error encoding JSON: %v", err)
+		logEvent("ERROR", "json_encoding_failed", map[string]interface{}{
+			"event": "json_encoding_failed",
+			"error": err.Error(),
+		})
 	}
 }
 
@@ -255,8 +288,23 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 // loggingMiddleware logs incoming requests
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s", r.Method, r.RequestURI, r.RemoteAddr)
-		next.ServeHTTP(w, r)
+		logEvent("INFO", "request_started", map[string]interface{}{
+			"event":     "request_started",
+			"method":    r.Method,
+			"path":      r.RequestURI,
+			"client_ip": getClientIP(r),
+		})
+
+		recorder := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(recorder, r)
+
+		logEvent("INFO", "request_completed", map[string]interface{}{
+			"event":       "request_completed",
+			"method":      r.Method,
+			"path":        r.RequestURI,
+			"status_code": recorder.statusCode,
+			"client_ip":   getClientIP(r),
+		})
 	})
 }
 
@@ -280,7 +328,9 @@ func main() {
 	debug := strings.ToLower(debugStr) == "true"
 
 	if debug {
-		log.Println("DEBUG mode enabled")
+		logEvent("DEBUG", "debug_mode_enabled", map[string]interface{}{
+			"event": "debug_mode_enabled",
+		})
 	}
 
 	// Custom 404 handler for undefined routes
@@ -296,12 +346,21 @@ func main() {
 	})
 
 	address := fmt.Sprintf("%s:%d", host, port)
-	log.Printf("Starting DevOps Info Service on %s", address)
-	log.Printf("Available endpoints:")
-	log.Printf("  GET http://%s/", address)
-	log.Printf("  GET http://%s/health", address)
+	logEvent("INFO", "service_starting", map[string]interface{}{
+		"event":   "startup",
+		"address": address,
+	})
+	logEvent("INFO", "service_endpoints", map[string]interface{}{
+		"event":      "configuration",
+		"root_url":   fmt.Sprintf("http://%s/", address),
+		"health_url": fmt.Sprintf("http://%s/health", address),
+	})
 
 	if err := http.ListenAndServe(address, loggingMiddleware(http.DefaultServeMux)); err != nil {
+		logEvent("ERROR", "server_error", map[string]interface{}{
+			"event": "server_error",
+			"error": err.Error(),
+		})
 		log.Fatalf("Server error: %v", err)
 	}
 }

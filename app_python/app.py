@@ -1,46 +1,65 @@
-"""
-DevOps Info Service
-Main application module
-"""
-import os
-import socket
-import platform
-import logging
+"""DevOps Info Service main application module."""
+
 import json
+import logging
+import os
+import platform
+import socket
 from datetime import datetime, timezone
+
 from flask import Flask, Response, request
 
-# Initialize Flask application
 app = Flask(__name__)
 
-
-# Configuration from environment variables
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO if not DEBUG else logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
-# Application start time for uptime calculation
+class JSONFormatter(logging.Formatter):
+    """Render single-line JSON logs for Loki ingestion."""
+
+    def format(self, record):
+        payload = {
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'level': record.levelname,
+            'logger': record.name,
+            'message': record.getMessage()
+        }
+
+        for field in ('event', 'method', 'path', 'status_code', 'client_ip'):
+            if hasattr(record, field):
+                payload[field] = getattr(record, field)
+
+        if record.exc_info:
+            payload['exception'] = self.formatException(record.exc_info)
+
+        return json.dumps(payload, ensure_ascii=False)
+
+
+def configure_logging():
+    """Configure root logging to emit JSON to stdout."""
+    handler = logging.StreamHandler()
+    handler.setFormatter(JSONFormatter())
+
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()
+    root_logger.setLevel(logging.INFO if not DEBUG else logging.DEBUG)
+    root_logger.addHandler(handler)
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 START_TIME = datetime.now(timezone.utc)
 
 
+def log_event(level, message, **fields):
+    """Emit structured application events with stable keys."""
+    logger.log(level, message, extra=fields)
+
+
 def json_response(data, status=200):
-    """
-    Create a JSON response with preserved key order.
-
-    Args:
-        data: Dictionary to convert to JSON
-        status: HTTP status code (default: 200)
-
-    Returns:
-        Flask Response object with JSON content
-    """
+    """Create a JSON response with preserved key order."""
     return Response(
         json.dumps(data, ensure_ascii=False, indent=2),
         mimetype='application/json'
@@ -48,22 +67,15 @@ def json_response(data, status=200):
 
 
 def get_system_info():
-    """
-    Collect system information.
-
-    Returns:
-        dict: System information including hostname, platform, architecture,
-        CPU count, and Python version
-    """
+    """Collect system information for the root endpoint."""
     try:
         hostname = socket.gethostname()
         platform_name = platform.system()
 
-        # Get platform version
-        if platform_name == "Linux":
+        if platform_name == 'Linux':
             try:
                 import distro
-                platform_version = f"{distro.name()} {distro.version()}"
+                platform_version = f'{distro.name()} {distro.version()}'
             except ImportError:
                 platform_version = platform.release()
         else:
@@ -77,18 +89,13 @@ def get_system_info():
             'cpu_count': os.cpu_count(),
             'python_version': platform.python_version()
         }
-    except Exception as e:
-        logger.error(f"Error getting system info: {e}")
+    except Exception as error:
+        logger.error('Error getting system info', exc_info=error)
         return {}
 
 
 def get_uptime():
-    """
-    Calculate application uptime.
-
-    Returns:
-        dict: Uptime in seconds and human-readable format
-    """
+    """Calculate application uptime."""
     delta = datetime.now(timezone.utc) - START_TIME
     seconds = int(delta.total_seconds())
     hours = seconds // 3600
@@ -104,12 +111,7 @@ def get_uptime():
 
 
 def get_runtime_info():
-    """
-    Get runtime information including uptime and current time.
-
-    Returns:
-        dict: Runtime information
-    """
+    """Get runtime information including uptime and current time."""
     uptime = get_uptime()
     return {
         'uptime_seconds': uptime['seconds'],
@@ -120,16 +122,7 @@ def get_runtime_info():
 
 
 def get_request_info(req):
-    """
-    Extract request information.
-
-    Args:
-        req: Flask request object
-
-    Returns:
-        dict: Request information including client IP, user agent,
-        method, and path
-    """
+    """Extract request information for the response body."""
     return {
         'client_ip': req.remote_addr or 'unknown',
         'user_agent': req.headers.get('User-Agent', 'unknown'),
@@ -139,12 +132,7 @@ def get_request_info(req):
 
 
 def get_endpoints():
-    """
-    Get list of available endpoints.
-
-    Returns:
-        list: List of endpoint dictionaries
-    """
+    """Get list of available endpoints."""
     return [
         {
             'path': '/',
@@ -159,16 +147,46 @@ def get_endpoints():
     ]
 
 
+@app.before_request
+def log_request_started():
+    """Log inbound HTTP requests before route handling."""
+    log_event(
+        logging.INFO,
+        'request_started',
+        event='request_started',
+        method=request.method,
+        path=request.path,
+        client_ip=request.remote_addr or 'unknown'
+    )
+
+
+@app.after_request
+def log_request_completed(response):
+    """Log outbound HTTP responses with status code context."""
+    log_event(
+        logging.INFO,
+        'request_completed',
+        event='request_completed',
+        method=request.method,
+        path=request.path,
+        status_code=response.status_code,
+        client_ip=request.remote_addr or 'unknown'
+    )
+
+    return response
+
+
 @app.route('/')
 def index():
-    """
-    Main endpoint - returns comprehensive service and system information.
-
-    Returns:
-        JSON response with service, system, runtime, request info,
-        and endpoints
-    """
-    logger.debug(f'Request: {request.method} {request.path}')
+    """Return service, system, runtime, request, and endpoint metadata."""
+    log_event(
+        logging.DEBUG,
+        'index_requested',
+        event='index_requested',
+        method=request.method,
+        path=request.path,
+        client_ip=request.remote_addr or 'unknown'
+    )
 
     response_data = {
         'service': {
@@ -188,13 +206,15 @@ def index():
 
 @app.route('/health')
 def health():
-    """
-    Health check endpoint for monitoring.
-
-    Returns:
-        JSON response with health status, timestamp, and uptime
-    """
-    logger.debug(f'Health check: {request.method} {request.path}')
+    """Return health data for monitoring and probes."""
+    log_event(
+        logging.DEBUG,
+        'health_requested',
+        event='health_requested',
+        method=request.method,
+        path=request.path,
+        client_ip=request.remote_addr or 'unknown'
+    )
 
     uptime = get_uptime()
     response_data = {
@@ -208,16 +228,17 @@ def health():
 
 @app.errorhandler(404)
 def not_found(error):
-    """
-    Handle 404 Not Found errors.
-
-    Args:
-        error: Error object
-
-    Returns:
-        JSON response with error message
-    """
-    logger.warning(f'404 Not Found: {request.path}')
+    """Return JSON for unknown routes."""
+    del error
+    log_event(
+        logging.WARNING,
+        'not_found',
+        event='not_found',
+        method=request.method,
+        path=request.path,
+        status_code=404,
+        client_ip=request.remote_addr or 'unknown'
+    )
     return json_response({
         'error': 'Not Found',
         'message': 'Endpoint does not exist',
@@ -227,16 +248,17 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    """
-    Handle 500 Internal Server Error.
-
-    Args:
-        error: Error object
-
-    Returns:
-        JSON response with error message
-    """
-    logger.error(f'500 Internal Server Error: {error}')
+    """Return JSON for internal server errors."""
+    log_event(
+        logging.ERROR,
+        'internal_error',
+        event='internal_error',
+        method=request.method,
+        path=request.path,
+        status_code=500,
+        client_ip=request.remote_addr or 'unknown'
+    )
+    logger.error('Unhandled application error', exc_info=error)
     return json_response({
         'error': 'Internal Server Error',
         'message': 'An unexpected error occurred'
@@ -244,8 +266,14 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    logger.info(f'Starting DevOps Info Service on {HOST}:{PORT}')
-    logger.info(f'Debug mode: {DEBUG}')
+    log_event(logging.INFO, 'service_starting', event='startup')
+    log_event(
+        logging.INFO,
+        'service_configuration',
+        event='configuration',
+        path=f'{HOST}:{PORT}',
+        status_code=200
+    )
 
     app.run(
         host=HOST,

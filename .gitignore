@@ -28,3 +28,6 @@ credentials
 ansible/.vault_pass
 ansible/inventory/*.pyc
 __pycache__/
+
+# Monitoring
+monitoring/.env
