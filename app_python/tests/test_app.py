@@ -42,6 +42,7 @@ def test_get_root_returns_expected_structure(client):
     endpoints = data["endpoints"]
     assert any(e["path"] == "/" for e in endpoints)
     assert any(e["path"] == "/health" for e in endpoints)
+    assert any(e["path"] == "/metrics" for e in endpoints)
 
 
 def test_get_health_returns_expected_structure(client):
@@ -68,3 +69,13 @@ def test_invalid_path_returns_404(client):
 def test_method_not_allowed_returns_405(client):
     response = client.post("/")
     assert response.status_code == 405
+
+
+def test_metrics_endpoint_returns_prometheus_format(client):
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "text/plain" in response.content_type
+    body = response.get_data(as_text=True)
+    assert "# HELP http_requests_total" in body
+    assert "# TYPE http_request_duration_seconds histogram" in body
+    assert "# TYPE http_requests_in_progress gauge" in body

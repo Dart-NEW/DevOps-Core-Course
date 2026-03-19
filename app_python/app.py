@@ -5,9 +5,11 @@ import logging
 import os
 import platform
 import socket
+import time
 from datetime import datetime, timezone
 
 from flask import Flask, Response, request
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
 app = Flask(__name__)
 
@@ -51,6 +53,32 @@ def configure_logging():
 configure_logging()
 logger = logging.getLogger(__name__)
 START_TIME = datetime.now(timezone.utc)
+
+# RED metrics for request-driven service monitoring.
+HTTP_REQUESTS_TOTAL = Counter(
+    'http_requests_total',
+    'Total HTTP requests processed',
+    ['method', 'endpoint', 'status_code']
+)
+HTTP_REQUEST_DURATION_SECONDS = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration in seconds',
+    ['method', 'endpoint', 'status_code']
+)
+HTTP_REQUESTS_IN_PROGRESS = Gauge(
+    'http_requests_in_progress',
+    'HTTP requests currently in progress',
+    ['method', 'endpoint']
+)
+ENDPOINT_CALLS_TOTAL = Counter(
+    'devops_info_endpoint_calls_total',
+    'Total calls per endpoint',
+    ['endpoint']
+)
+SYSTEM_INFO_COLLECTION_SECONDS = Histogram(
+    'devops_info_system_collection_seconds',
+    'Time spent collecting system information'
+)
 
 
 def log_event(level, message, **fields):
@@ -143,13 +171,33 @@ def get_endpoints():
             'path': '/health',
             'method': 'GET',
             'description': 'Health check'
+        },
+        {
+            'path': '/metrics',
+            'method': 'GET',
+            'description': 'Prometheus metrics endpoint'
         }
     ]
+
+
+def normalize_endpoint(path):
+    """Normalize endpoint labels to keep cardinality low."""
+    known_paths = {'/', '/health', '/metrics'}
+    return path if path in known_paths else '/other'
 
 
 @app.before_request
 def log_request_started():
     """Log inbound HTTP requests before route handling."""
+    request._request_start_time = time.perf_counter()  # pylint: disable=protected-access
+    endpoint = normalize_endpoint(request.path)
+    request._metrics_endpoint = endpoint  # pylint: disable=protected-access
+    request._gauge_ctx = HTTP_REQUESTS_IN_PROGRESS.labels(  # pylint: disable=protected-access
+        method=request.method,
+        endpoint=endpoint
+    ).track_inprogress()
+    request._gauge_ctx.__enter__()  # pylint: disable=protected-access
+
     log_event(
         logging.INFO,
         'request_started',
@@ -163,6 +211,29 @@ def log_request_started():
 @app.after_request
 def log_request_completed(response):
     """Log outbound HTTP responses with status code context."""
+    endpoint = getattr(request, '_metrics_endpoint', normalize_endpoint(request.path))
+    start_time = getattr(request, '_request_start_time', None)
+    status_code = str(response.status_code)
+
+    HTTP_REQUESTS_TOTAL.labels(
+        method=request.method,
+        endpoint=endpoint,
+        status_code=status_code
+    ).inc()
+
+    ENDPOINT_CALLS_TOTAL.labels(endpoint=endpoint).inc()
+
+    if start_time is not None:
+        HTTP_REQUEST_DURATION_SECONDS.labels(
+            method=request.method,
+            endpoint=endpoint,
+            status_code=status_code
+        ).observe(time.perf_counter() - start_time)
+
+    gauge_ctx = getattr(request, '_gauge_ctx', None)
+    if gauge_ctx is not None:
+        gauge_ctx.__exit__(None, None, None)
+
     log_event(
         logging.INFO,
         'request_completed',
@@ -188,6 +259,9 @@ def index():
         client_ip=request.remote_addr or 'unknown'
     )
 
+    with SYSTEM_INFO_COLLECTION_SECONDS.time():
+        system_info = get_system_info()
+
     response_data = {
         'service': {
             'name': 'devops-info-service',
@@ -195,7 +269,7 @@ def index():
             'description': 'DevOps course info service',
             'framework': 'Flask'
         },
-        'system': get_system_info(),
+        'system': system_info,
         'runtime': get_runtime_info(),
         'request': get_request_info(request),
         'endpoints': get_endpoints()
@@ -224,6 +298,13 @@ def health():
     }
 
     return json_response(response_data)
+
+
+@app.route('/metrics')
+def metrics():
+    """Expose Prometheus metrics in text format."""
+    metric_output = generate_latest()
+    return Response(metric_output, mimetype=CONTENT_TYPE_LATEST)
 
 
 @app.errorhandler(404)

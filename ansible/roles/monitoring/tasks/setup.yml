@@ -11,6 +11,7 @@
         - "{{ monitoring_project_dir }}"
         - "{{ monitoring_project_dir }}/loki"
         - "{{ monitoring_project_dir }}/promtail"
+        - "{{ monitoring_project_dir }}/prometheus"
         - "{{ monitoring_project_dir }}/grafana"
         - "{{ monitoring_project_dir }}/grafana/dashboards"
         - "{{ monitoring_project_dir }}/grafana/provisioning"
@@ -47,8 +48,20 @@
         dest: "{{ monitoring_project_dir }}/grafana/provisioning/dashboards/dashboards.yml"
         mode: "0644"
 
+    - name: Template Prometheus config
+      ansible.builtin.template:
+        src: prometheus.yml.j2
+        dest: "{{ monitoring_project_dir }}/prometheus/prometheus.yml"
+        mode: "0644"
+
     - name: Template Grafana dashboard JSON
       ansible.builtin.template:
         src: grafana-dashboard.json.j2
         dest: "{{ monitoring_project_dir }}/grafana/dashboards/lab07-logs.json"
+        mode: "0644"
+
+    - name: Template Grafana metrics dashboard JSON
+      ansible.builtin.template:
+        src: grafana-metrics-dashboard.json.j2
+        dest: "{{ monitoring_project_dir }}/grafana/dashboards/lab08-metrics.json"
         mode: "0644"
