@@ -1,0 +1,16 @@
+
+playbook: playbooks/provision.yml
+
+  play #1 (webservers): Provision web servers	TAGS: []
+    tasks:
+      common : Update apt cache	TAGS: [common, packages]
+      common : Install common packages	TAGS: [common, packages]
+      common : Set system timezone	TAGS: [common, packages]
+      common : Ensure managed users exist	TAGS: [common, users]
+      docker : Install apt dependencies for Docker repo	TAGS: [docker, docker_install]
+      docker : Create apt keyrings directory	TAGS: [docker, docker_install]
+      docker : Add Docker GPG key	TAGS: [docker, docker_install]
+      docker : Add Docker apt repository	TAGS: [docker, docker_install]
+      docker : Install Docker packages	TAGS: [docker, docker_install]
+      docker : Add users to docker group	TAGS: [docker, docker_config]
+      docker : Install python3-docker package	TAGS: [docker, docker_config]

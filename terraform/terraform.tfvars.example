@@ -1,0 +1,8 @@
+cloud_id            = "<your-cloud-id>"
+folder_id           = "<your-folder-id>"
+zone                = "ru-central1-a"
+subnet_cidr         = "10.10.0.0/24"
+allowed_ssh_cidr    = "<your-public-ip>/32"
+ssh_username        = "ubuntu"
+ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+image_family        = "ubuntu-2404-lts"

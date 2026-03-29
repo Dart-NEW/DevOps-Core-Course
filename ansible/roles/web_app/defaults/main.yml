@@ -1,0 +1,24 @@
+---
+web_app_name: devops-app
+web_app_docker_image: "{{ dockerhub_username | default('your_dockerhub_username') }}/devops-info-service-python"
+web_app_docker_tag: latest
+web_app_port: 8000
+web_app_internal_port: 5000
+web_app_restart_policy: unless-stopped
+web_app_healthcheck_path: /health
+web_app_compose_project_dir: "/opt/{{ web_app_name }}"
+web_app_docker_compose_version: "3.8"
+
+# Optional secret, recommended to override from vault/group vars.
+web_app_secret_key: "change-me"
+
+# Runtime env for the containerized app.
+web_app_env:
+  PORT: "{{ web_app_internal_port | string }}"
+  APP_SECRET_KEY: "{{ web_app_secret_key }}"
+
+# Wipe Logic Control
+# Set to true to remove application completely.
+# Wipe only:     ansible-playbook playbooks/deploy.yml -e "web_app_wipe=true" --tags web_app_wipe
+# Clean install: ansible-playbook playbooks/deploy.yml -e "web_app_wipe=true"
+web_app_wipe: false

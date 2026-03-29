@@ -1,0 +1,256 @@
+=== Cluster Info ===
+Kubernetes control plane is running at https://127.0.0.1:34875
+CoreDNS is running at https://127.0.0.1:34875/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+=== Get All Resources ===
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/devops-info-service-54b955b486-b8c6s   1/1     Running   0          15s
+pod/devops-info-service-54b955b486-gfkbj   1/1     Running   0          15s
+pod/devops-info-service-54b955b486-vnkl4   1/1     Running   0          15s
+
+NAME                          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/devops-info-service   NodePort    10.96.255.61   <none>        80:30080/TCP   14s
+service/kubernetes            ClusterIP   10.96.0.1      <none>        443/TCP        8m9s
+
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/devops-info-service   3/3     3            3           15s
+
+NAME                                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/devops-info-service-54b955b486   3         3         3       15s
+
+=== Deployment Details ===
+Name:                   devops-info-service
+Namespace:              default
+CreationTimestamp:      Thu, 26 Mar 2026 22:49:43 +0300
+Labels:                 app=devops-info-service
+                        version=1.0
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=devops-info-service
+Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+Pod Template:
+  Labels:  app=devops-info-service
+           version=1.0
+  Containers:
+   devops-info-service:
+    Image:      devops-info-service-python:lab09
+    Port:       5000/TCP (http)
+    Host Port:  0/TCP (http)
+    Limits:
+      cpu:     200m
+      memory:  256Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:http/health delay=10s timeout=5s period=10s #success=1 #failure=3
+    Readiness:  http-get http://:http/health delay=5s timeout=3s period=5s #success=1 #failure=2
+    Startup:    http-get http://:http/health delay=0s timeout=1s period=2s #success=1 #failure=30
+    Environment:
+      HOST:   0.0.0.0
+      PORT:   5000
+      DEBUG:  false
+    Mounts:
+      /tmp from scratch (rw)
+  Volumes:
+   scratch:
+    Type:          EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:        
+    SizeLimit:     <unset>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   devops-info-service-54b955b486 (3/3 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  15s   deployment-controller  Scaled up replica set devops-info-service-54b955b486 to 3
+
+=== Service Details ===
+Name:                     devops-info-service
+Namespace:                default
+Labels:                   app=devops-info-service
+Annotations:              <none>
+Selector:                 app=devops-info-service
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.96.255.61
+IPs:                      10.96.255.61
+Port:                     http  80/TCP
+TargetPort:               http/TCP
+NodePort:                 http  30080/TCP
+Endpoints:                10.244.0.7:5000,10.244.0.5:5000,10.244.0.6:5000
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+
+=== Pod Status ===
+NAME                                   READY   STATUS    RESTARTS   AGE   IP           NODE                  NOMINATED NODE   READINESS GATES
+devops-info-service-54b955b486-b8c6s   1/1     Running   0          15s   10.244.0.5   lab09-control-plane   <none>           <none>
+devops-info-service-54b955b486-gfkbj   1/1     Running   0          15s   10.244.0.6   lab09-control-plane   <none>           <none>
+devops-info-service-54b955b486-vnkl4   1/1     Running   0          15s   10.244.0.7   lab09-control-plane   <none>           <none>
+=== Testing Service via Port Forward ===
+Forwarding from 127.0.0.1:8000 -> 5000
+Forwarding from [::1]:8000 -> 5000
+Testing /health endpoint...
+Handling connection for 8000
+{
+  "status": "healthy",
+  "timestamp": "2026-03-26T19:50:07.938490+00:00",
+  "uptime_seconds": 16
+}
+
+Testing /python endpoint...
+Handling connection for 8000
+{
+  "error": "Not Found",
+  "message": "Endpoint does not exist",
+  "path": "/python"
+}
+
+Testing /metrics endpoint...
+Handling connection for 8000
+# HELP python_gc_objects_collected_total Objects collected during gc
+# TYPE python_gc_objects_collected_total counter
+python_gc_objects_collected_total{generation="0"} 353.0
+python_gc_objects_collected_total{generation="1"} 5.0
+python_gc_objects_collected_total{generation="2"} 0.0
+# HELP python_gc_objects_uncollectable_total Uncollectable objects found during GC
+# TYPE python_gc_objects_uncollectable_total counter
+python_gc_objects_uncollectable_total{generation="0"} 0.0
+python_gc_objects_uncollectable_total{generation="1"} 0.0
+python_gc_objects_uncollectable_total{generation="2"} 0.0
+=== Current Replica Count ===
+3
+
+=== Scaling to 5 replicas ===
+deployment.apps/devops-info-service scaled
+
+=== Wait for 5 replicas to be ready ===
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+devops-info-service   3/5     5            3           39s
+
+=== Pods after scaling ===
+devops-info-service-54b955b486-9cj8g   0/1     Running   0          5s
+devops-info-service-54b955b486-b8c6s   1/1     Running   0          39s
+devops-info-service-54b955b486-gfkbj   1/1     Running   0          39s
+devops-info-service-54b955b486-hhxzd   0/1     Running   0          5s
+devops-info-service-54b955b486-vnkl4   1/1     Running   0          39s
+
+=== Scaling back to 3 replicas ===
+deployment.apps/devops-info-service scaled
+
+=== Pods after scaling back ===
+devops-info-service-54b955b486-9cj8g   0/1     Terminating   0          8s
+devops-info-service-54b955b486-b8c6s   1/1     Running       0          42s
+devops-info-service-54b955b486-gfkbj   1/1     Running       0          42s
+devops-info-service-54b955b486-hhxzd   0/1     Terminating   0          8s
+devops-info-service-54b955b486-vnkl4   1/1     Running       0          42s
+=== Current Rollout History ===
+deployment.apps/devops-info-service 
+REVISION  CHANGE-CAUSE
+1         <none>
+
+
+=== Simulating Rolling Update (changing environment variable) ===
+deployment.apps/devops-info-service patched
+
+=== Waiting for rollout to complete ===
+Waiting for deployment "devops-info-service" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 1 old replicas are pending termination...
+error: timed out waiting for the condition
+
+=== Rollout History After Update ===
+deployment.apps/devops-info-service 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+
+=== Latest Pods After First Rollout ===
+devops-info-service-54b955b486-b8c6s   1/1     Terminating         0          95s
+devops-info-service-54b955b486-gfkbj   1/1     Running             0          95s
+devops-info-service-54b955b486-vnkl4   1/1     Terminating         0          95s
+devops-info-service-649cb9d787-2hbbx   1/1     Running             0          16s
+devops-info-service-649cb9d787-2smmr   0/1     ContainerCreating   0          1s
+devops-info-service-649cb9d787-t5jlr   1/1     Running             0          31s
+
+=== Rolling Back ===
+deployment.apps/devops-info-service rolled back
+
+=== Waiting for rollback to complete ===
+Waiting for deployment "devops-info-service" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "devops-info-service" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "devops-info-service" rollout to finish: 1 old replicas are pending termination...
+deployment "devops-info-service" successfully rolled out
+
+=== Rollout History After Rollback ===
+deployment.apps/devops-info-service 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+
+=== Pod Logs Example ===
+{"timestamp": "2026-03-26T19:54:31.979133+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:31] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:36.979499+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:36.979942+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:36.980256+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:36] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:36.981192+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:36.981590+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:36.981869+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:36] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:41.977552+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:41.977899+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:41.978178+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:41] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:29.268647+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:29] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:34.267666+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:34.268298+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:34.268701+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:34] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:34.270200+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:34.270799+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:34.271160+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:34] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:39.268060+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:39.268561+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:39.268986+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:39] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:33.569632+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:33] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:38.566406+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:38.567108+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:38.567621+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:38] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:38.568923+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:38.569286+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:38.569609+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:38] \"GET /health HTTP/1.1\" 200 -"}
+{"timestamp": "2026-03-26T19:54:43.566433+00:00", "level": "INFO", "logger": "__main__", "message": "request_started", "event": "request_started", "method": "GET", "path": "/health", "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:43.566822+00:00", "level": "INFO", "logger": "__main__", "message": "request_completed", "event": "request_completed", "method": "GET", "path": "/health", "status_code": 200, "client_ip": "10.244.0.1"}
+{"timestamp": "2026-03-26T19:54:43.567132+00:00", "level": "INFO", "logger": "werkzeug", "message": "10.244.0.1 - - [26/Mar/2026 19:54:43] \"GET /health HTTP/1.1\" 200 -"}
+
+
+=== Cluster Nodes ===
+NAME                  STATUS   ROLES           AGE   VERSION
+lab09-control-plane   Ready    control-plane   12m   v1.31.0
+
+=== Kube System Pods ===
+NAME                                          READY   STATUS    RESTARTS   AGE
+coredns-6f6b679f8f-tjc2b                      1/1     Running   0          12m
+coredns-6f6b679f8f-vkpp6                      1/1     Running   0          12m
+etcd-lab09-control-plane                      1/1     Running   0          12m
+kindnet-bclg4                                 1/1     Running   0          12m
+kube-apiserver-lab09-control-plane            1/1     Running   0          12m
+kube-controller-manager-lab09-control-plane   1/1     Running   0          12m
+kube-proxy-7xwqd                              1/1     Running   0          12m
+kube-scheduler-lab09-control-plane            1/1     Running   0          12m

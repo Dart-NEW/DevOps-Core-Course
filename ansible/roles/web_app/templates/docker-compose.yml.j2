@@ -1,0 +1,13 @@
+version: '{{ web_app_docker_compose_version }}'
+
+services:
+  {{ web_app_name }}:
+    image: {{ web_app_docker_image }}:{{ web_app_docker_tag }}
+    container_name: {{ web_app_name }}
+    ports:
+      - "{{ web_app_port }}:{{ web_app_internal_port }}"
+    environment:
+{% for env_key, env_value in web_app_env.items() %}
+      {{ env_key }}: "{{ env_value }}"
+{% endfor %}
+    restart: {{ web_app_restart_policy }}
