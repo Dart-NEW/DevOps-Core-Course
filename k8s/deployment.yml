@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-info-service
+  namespace: default
+  labels:
+    app: devops-info-service
+    version: "1.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: devops-info-service
+  template:
+    metadata:
+      labels:
+        app: devops-info-service
+        version: "1.0"
+    spec:
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      # Affinity rules for better distribution
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - devops-info-service
+              topologyKey: kubernetes.io/hostname
+      
+      containers:
+      - name: devops-info-service
+        image: devops-info-service-python:lab09
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: http
+          containerPort: 5000
+          protocol: TCP
+        
+        env:
+        - name: HOST
+          value: "0.0.0.0"
+        - name: PORT
+          value: "5000"
+        - name: DEBUG
+          value: "false"
+        
+        # Resource management
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        # Liveness probe - restart if unhealthy
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness probe - remove from service if not ready
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        
+        # Startup probe - for slow-starting containers
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 0
+          periodSeconds: 2
+          failureThreshold: 30
+        
+        # Volume mounts (if needed in future)
+        volumeMounts:
+        - name: scratch
+          mountPath: /tmp
+      
+      # Restart policy
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      
+      # Volumes
+      volumes:
+      - name: scratch
+        emptyDir: {}
