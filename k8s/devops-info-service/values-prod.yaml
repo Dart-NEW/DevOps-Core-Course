@@ -8,6 +8,21 @@ env:
   - name: DEBUG
     value: "false"
 
+appEnv: "production"
+logLevel: "info"
+
+secrets:
+  username: "prod-user"
+  password: "prod-password"
+  apiKey: "prod-api-key"
+
+vault:
+  enabled: true
+  role: "devops-info-service"
+  secretPath: "secret/devops-info-service/config"
+  template:
+    enabled: true
+
 service:
   type: LoadBalancer
   port: 80

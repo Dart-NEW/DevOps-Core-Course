@@ -8,6 +8,21 @@ env:
   - name: DEBUG
     value: "true"
 
+appEnv: "development"
+logLevel: "debug"
+
+secrets:
+  username: "dev-user"
+  password: "dev-password"
+  apiKey: "dev-api-key"
+
+vault:
+  enabled: true
+  role: "devops-info-service"
+  secretPath: "secret/devops-info-service/config"
+  template:
+    enabled: true
+
 service:
   type: NodePort
   port: 80

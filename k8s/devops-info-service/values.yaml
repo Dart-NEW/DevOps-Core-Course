@@ -18,6 +18,21 @@ env:
   - name: DEBUG
     value: "false"
 
+appEnv: "production"
+logLevel: "info"
+
+secrets:
+  username: "change-me"
+  password: "change-me"
+  apiKey: "change-me"
+
+vault:
+  enabled: false
+  role: "devops-info-service"
+  secretPath: "secret/devops-info-service/config"
+  template:
+    enabled: false
+
 commonLabels:
   app.kubernetes.io/part-of: devops-course
 
