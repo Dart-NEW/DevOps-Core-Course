@@ -1,0 +1,13 @@
+$ kubectl logs -n default lab16-app-devops-info-service-0 -c init-download
+Connecting to example.com (172.66.147.243:443)
+wget: note: TLS certificate validation not implemented
+saving to '/work-dir/index.html'
+index.html           100% |********************************|   528  0:00:00 ETA
+'/work-dir/index.html' saved
+
+$ kubectl get pod lab16-app-devops-info-service-0 -n default -o jsonpath="{range .status.initContainerStatuses[*]}{.name}{\": state=\"}{.state.terminated.reason}{\", exit=\"}{.state.terminated.exitCode}{\"\\n\"}{end}"
+init-download: state=Completed, exit=0
+wait-for-service: state=Completed, exit=0
+
+$ kubectl exec -n default lab16-app-devops-info-service-0 -- cat /init-data/index.html | head -2
+<!doctype html><html lang="en"><head><title>Example Domain</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{background:#eee;width:60vw;margin:15vh auto;font-family:system-ui,sans-serif}h1{font-size:1.5em}div{opacity:0.8}a:link,a:visited{color:#348}</style></head><body><div><h1>Example Domain</h1><p>This domain is for use in documentation examples without needing permission. Avoid use in operations.</p><p><a href="https://iana.org/domains/example">Learn more</a></p></div></body></html>

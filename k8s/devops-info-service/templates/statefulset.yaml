@@ -53,6 +53,39 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.initContainers.enabled }}
+      initContainers:
+        {{- if .Values.initContainers.download.enabled }}
+        - name: init-download
+          image: {{ .Values.initContainers.download.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - wget -O {{ printf "%s/%s" .Values.initContainers.download.mountPath .Values.initContainers.download.outputFile | quote }} {{ .Values.initContainers.download.url | quote }}
+          volumeMounts:
+            - name: init-workdir
+              mountPath: {{ .Values.initContainers.download.mountPath | quote }}
+        {{- end }}
+        {{- if .Values.initContainers.waitForService.enabled }}
+        - name: wait-for-service
+          image: {{ .Values.initContainers.waitForService.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              i=0
+              until nslookup {{ .Values.initContainers.waitForService.host | quote }} >/dev/null 2>&1; do
+                i=$((i+1))
+                if [ "$((i * {{ .Values.initContainers.waitForService.intervalSeconds }}))" -ge "{{ .Values.initContainers.waitForService.timeoutSeconds }}" ]; then
+                  echo "Timed out waiting for {{ .Values.initContainers.waitForService.host }}"
+                  exit 1
+                fi
+                sleep {{ .Values.initContainers.waitForService.intervalSeconds }}
+              done
+        {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -90,6 +123,10 @@ spec:
               readOnly: true
             - name: data-volume
               mountPath: {{ .Values.persistence.mountPath | quote }}
+            {{- if and .Values.initContainers.enabled .Values.initContainers.download.enabled }}
+            - name: init-workdir
+              mountPath: {{ .Values.initContainers.download.mainMountPath | quote }}
+            {{- end }}
             {{- if .Values.scratchVolume.enabled }}
             - name: scratch
               mountPath: {{ .Values.scratchVolume.mountPath | quote }}
@@ -111,6 +148,10 @@ spec:
         - name: config-volume
           configMap:
             name: {{ include "devops-info-service.configFileName" . }}
+        {{- if and .Values.initContainers.enabled .Values.initContainers.download.enabled }}
+        - name: init-workdir
+          emptyDir: {}
+        {{- end }}
         {{- if .Values.scratchVolume.enabled }}
         - name: scratch
           emptyDir: {}

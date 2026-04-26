@@ -1,7 +1,4 @@
-replicaCount: 3
-
-nameOverride: ""
-fullnameOverride: ""
+replicaCount: 2
 
 image:
   repository: devops-info-service-python
@@ -18,7 +15,7 @@ env:
   - name: DEBUG
     value: "false"
 
-appEnv: "production"
+appEnv: "monitoring"
 logLevel: "info"
 
 config:
@@ -32,7 +29,7 @@ persistence:
   enabled: true
   size: 100Mi
   accessMode: ReadWriteOnce
-  storageClass: ""
+  storageClass: standard
   mountPath: /data
   visitsFile: /data/visits
 
@@ -53,7 +50,7 @@ commonLabels:
 
 podAnnotations: {}
 podLabels:
-  version: "1.0.0"
+  version: "monitoring-v1"
 
 podSecurityContext:
   runAsNonRoot: true
@@ -75,7 +72,7 @@ strategy:
     maxUnavailable: 0
 
 statefulset:
-  enabled: false
+  enabled: true
   podManagementPolicy: OrderedReady
   revisionHistoryLimit: 3
   updateStrategy:
@@ -84,24 +81,24 @@ statefulset:
       partition: 0
 
 initContainers:
-  enabled: false
+  enabled: true
   download:
-    enabled: false
+    enabled: true
     image: busybox:1.36
     url: https://example.com
     outputFile: index.html
     mountPath: /work-dir
     mainMountPath: /init-data
   waitForService:
-    enabled: false
+    enabled: true
     image: busybox:1.36
-    host: kubernetes.default.svc.cluster.local
+    host: monitoring-grafana.monitoring.svc.cluster.local
     intervalSeconds: 2
     timeoutSeconds: 120
 
 monitoring:
   serviceMonitor:
-    enabled: false
+    enabled: true
     namespace: ""
     labels:
       release: monitoring
@@ -129,9 +126,9 @@ rollout:
     successCondition: result == "healthy"
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 80
-  nodePort: 30081
+  nodePort: null
   sessionAffinity: None
   annotations: {}
 
@@ -176,7 +173,7 @@ startupProbe:
 terminationGracePeriodSeconds: 30
 
 podAntiAffinity:
-  enabled: true
+  enabled: false
   weight: 100
   topologyKey: kubernetes.io/hostname
 
@@ -185,7 +182,7 @@ scratchVolume:
   mountPath: /tmp
 
 hooks:
-  enabled: true
+  enabled: false
   image:
     repository: busybox
     tag: "1.36.1"
