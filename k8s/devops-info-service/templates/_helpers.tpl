@@ -35,6 +35,20 @@ Name for the PVC used by the visit counter.
 {{- end -}}
 
 {{/*
+Name for the blue-green preview service.
+*/}}
+{{- define "devops-info-service.previewServiceName" -}}
+{{- printf "%s-preview" (include "devops-info-service.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Name for the canary AnalysisTemplate.
+*/}}
+{{- define "devops-info-service.analysisTemplateName" -}}
+{{- printf "%s-health" (include "devops-info-service.fullname" .) -}}
+{{- end -}}
+
+{{/*
 Common non-secret environment variables used by the application.
 */}}
 {{- define "devops-info-service.commonEnv" -}}
