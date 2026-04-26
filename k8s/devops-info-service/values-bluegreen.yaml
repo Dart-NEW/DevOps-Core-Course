@@ -1,0 +1,46 @@
+replicaCount: 3
+
+image:
+  repository: devops-info-service-python
+  tag: lab12
+  pullPolicy: IfNotPresent
+
+appEnv: "bluegreen"
+logLevel: "info"
+
+podLabels:
+  version: "bluegreen-v1"
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30087
+  sessionAffinity: None
+  annotations: {}
+
+persistence:
+  enabled: true
+  size: 100Mi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+  mountPath: /data
+  visitsFile: /data/visits
+
+podAntiAffinity:
+  enabled: false
+
+hooks:
+  enabled: false
+
+rollout:
+  enabled: true
+  strategy: blueGreen
+  revisionHistoryLimit: 3
+  blueGreen:
+    autoPromotionEnabled: false
+    scaleDownDelaySeconds: 30
+    previewService:
+      type: NodePort
+      nodePort: 30088
+  analysis:
+    enabled: false

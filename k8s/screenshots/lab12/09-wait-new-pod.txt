@@ -1,0 +1,2 @@
+$ kubectl wait --for=condition=ready pod -n lab12 -l app.kubernetes.io/instance=lab12-devops --timeout=180s
+pod/lab12-devops-devops-info-service-666b4d8b78-z5xfz condition met

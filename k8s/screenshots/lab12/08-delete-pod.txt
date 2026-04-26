@@ -1,0 +1,2 @@
+$ kubectl delete pod -n lab12 lab12-devops-devops-info-service-666b4d8b78-4vh6p
+pod "lab12-devops-devops-info-service-666b4d8b78-4vh6p" deleted from lab12 namespace

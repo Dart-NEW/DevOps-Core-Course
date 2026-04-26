@@ -1,0 +1,7 @@
+
+playbook: playbooks/deploy_all.yml
+
+  play #1 (webservers): Deploy All Applications	TAGS: []
+    tasks:
+      Deploy Python app	TAGS: [app_deploy, python_app]
+      Deploy bonus app	TAGS: [app_deploy, bonus_app]

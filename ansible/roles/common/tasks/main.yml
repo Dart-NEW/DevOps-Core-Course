@@ -1,0 +1,62 @@
+---
+- name: Install baseline packages and timezone
+  become: true
+  tags:
+    - packages
+  block:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install common packages
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
+
+    - name: Set system timezone
+      community.general.timezone:
+        name: "{{ common_timezone }}"
+
+  rescue:
+    - name: Retry apt cache with fix-missing
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Reinstall common packages after apt recovery
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
+
+  always:
+    - name: Log package block completion
+      ansible.builtin.lineinfile:
+        path: /tmp/ansible-common-role.log
+        create: true
+        mode: "0644"
+        line: "{{ ansible_date_time.iso8601 }} packages block finished"
+
+- name: Manage local users
+  when: common_managed_users | length > 0
+  become: true
+  tags:
+    - users
+  block:
+    - name: Ensure managed users exist
+      ansible.builtin.user:
+        name: "{{ item.name | default(item) }}"
+        state: present
+        shell: "{{ item.shell | default('/bin/bash') }}"
+        groups: "{{ item.groups | default(omit) }}"
+        append: true
+      loop: "{{ common_managed_users }}"
+      loop_control:
+        label: "{{ item.name | default(item) }}"
+
+  always:
+    - name: Log user block completion
+      ansible.builtin.lineinfile:
+        path: /tmp/ansible-common-role.log
+        create: true
+        mode: "0644"
+        line: "{{ ansible_date_time.iso8601 }} users block finished"
