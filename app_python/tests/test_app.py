@@ -1,10 +1,12 @@
+import app as app_module
 import pytest
 
 from app import app
 
 
 @pytest.fixture()
-def client():
+def client(tmp_path):
+    app_module.visit_counter = app_module.VisitCounter(str(tmp_path / "visits"))
     app.config.update({"TESTING": True})
     with app.test_client() as client:
         yield client
@@ -42,6 +44,7 @@ def test_get_root_returns_expected_structure(client):
     endpoints = data["endpoints"]
     assert any(e["path"] == "/" for e in endpoints)
     assert any(e["path"] == "/health" for e in endpoints)
+    assert any(e["path"] == "/visits" for e in endpoints)
     assert any(e["path"] == "/metrics" for e in endpoints)
 
 
@@ -79,3 +82,26 @@ def test_metrics_endpoint_returns_prometheus_format(client):
     assert "# HELP http_requests_total" in body
     assert "# TYPE http_request_duration_seconds histogram" in body
     assert "# TYPE http_requests_in_progress gauge" in body
+
+
+def test_visits_endpoint_returns_persisted_counter(client):
+    initial_response = client.get("/visits")
+    assert initial_response.status_code == 200
+    assert initial_response.get_json()["visits"] == 0
+
+    client.get("/")
+    second_response = client.get("/visits")
+    assert second_response.status_code == 200
+    assert second_response.get_json()["visits"] == 1
+
+    client.get("/")
+    third_response = client.get("/visits")
+    assert third_response.get_json()["visits"] == 2
+
+
+def test_visits_counter_survives_counter_reload(client):
+    client.get("/")
+    client.get("/")
+
+    restored_counter = app_module.VisitCounter(app_module.visit_counter.path)
+    assert restored_counter.get_count() == 2

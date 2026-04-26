@@ -1,0 +1,2 @@
+$ kubectl exec -n lab12 lab12-devops-devops-info-service-666b4d8b78-z5xfz -- cat /data/visits
+AFTER=9

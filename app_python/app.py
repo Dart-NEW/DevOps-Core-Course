@@ -5,6 +5,7 @@ import logging
 import os
 import platform
 import socket
+import threading
 import time
 from datetime import datetime, timezone
 
@@ -16,6 +17,7 @@ app = Flask(__name__)
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+VISITS_FILE = os.getenv('VISITS_FILE', os.path.join('data', 'visits'))
 
 
 class JSONFormatter(logging.Formatter):
@@ -79,6 +81,64 @@ SYSTEM_INFO_COLLECTION_SECONDS = Histogram(
     'devops_info_system_collection_seconds',
     'Time spent collecting system information'
 )
+
+
+class VisitCounter:
+    """Persist and increment visit counts in a thread-safe way."""
+
+    def __init__(self, path):
+        self.path = path
+        self._lock = threading.Lock()
+        self._count = self._read_from_disk()
+
+    def _ensure_parent_dir(self):
+        directory = os.path.dirname(self.path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+
+    def _read_from_disk(self):
+        try:
+            with open(self.path, 'r', encoding='utf-8') as file:
+                raw_value = file.read().strip()
+        except FileNotFoundError:
+            return 0
+
+        if not raw_value:
+            return 0
+
+        try:
+            return int(raw_value)
+        except ValueError:
+            logger.warning(
+                'Invalid visits counter value, resetting to zero',
+                extra={'event': 'invalid_visits_counter', 'path': self.path}
+            )
+            return 0
+
+    def _write_to_disk(self, count):
+        self._ensure_parent_dir()
+        temp_path = f'{self.path}.tmp'
+        with open(temp_path, 'w', encoding='utf-8') as file:
+            file.write(str(count))
+        os.replace(temp_path, self.path)
+
+    def get_count(self):
+        """Return the current persisted visit count."""
+        with self._lock:
+            self._count = self._read_from_disk()
+            return self._count
+
+    def increment(self):
+        """Increment the visit count and persist it atomically."""
+        with self._lock:
+            current = self._read_from_disk()
+            updated = current + 1
+            self._write_to_disk(updated)
+            self._count = updated
+            return updated
+
+
+visit_counter = VisitCounter(VISITS_FILE)
 
 
 def log_event(level, message, **fields):
@@ -173,6 +233,11 @@ def get_endpoints():
             'description': 'Health check'
         },
         {
+            'path': '/visits',
+            'method': 'GET',
+            'description': 'Current persisted visit counter'
+        },
+        {
             'path': '/metrics',
             'method': 'GET',
             'description': 'Prometheus metrics endpoint'
@@ -182,7 +247,7 @@ def get_endpoints():
 
 def normalize_endpoint(path):
     """Normalize endpoint labels to keep cardinality low."""
-    known_paths = {'/', '/health', '/metrics'}
+    known_paths = {'/', '/health', '/metrics', '/visits'}
     return path if path in known_paths else '/other'
 
 
@@ -258,6 +323,15 @@ def index():
         path=request.path,
         client_ip=request.remote_addr or 'unknown'
     )
+    visits_count = visit_counter.increment()
+    log_event(
+        logging.INFO,
+        'visit_counter_incremented',
+        event='visit_counter_incremented',
+        path=VISITS_FILE,
+        status_code=200,
+        visits=visits_count
+    )
 
     with SYSTEM_INFO_COLLECTION_SECONDS.time():
         system_info = get_system_info()
@@ -276,6 +350,16 @@ def index():
     }
 
     return json_response(response_data)
+
+
+@app.route('/visits')
+def visits():
+    """Return the current persisted visits counter."""
+    visits_count = visit_counter.get_count()
+    return json_response({
+        'visits': visits_count,
+        'path': VISITS_FILE
+    })
 
 
 @app.route('/health')

@@ -11,6 +11,7 @@ The DevOps Info Service is a RESTful API that reports:
 - System information (hostname, platform, architecture, CPU count, Python version)
 - Runtime metrics (uptime, current time)
 - Request details (client IP, user agent, HTTP method)
+- Persistent visit counter stored on disk
 - Available endpoints documentation
 
 This service is designed to evolve throughout the course, with future enhancements including containerization, CI/CD pipelines, monitoring, and persistence.
@@ -80,6 +81,9 @@ HOST=127.0.0.1 PORT=3000 python app.py
 
 # Enable debug mode
 DEBUG=true python app.py
+
+# Persist visits in a custom file
+VISITS_FILE=./data/visits python app.py
 ```
 
 ### Verify the Service
@@ -92,6 +96,9 @@ curl http://localhost:5000/
 
 # Health check
 curl http://localhost:5000/health
+
+# Current visits counter
+curl http://localhost:5000/visits
 ```
 
 ## API Endpoints
@@ -131,7 +138,9 @@ Returns comprehensive service and system information.
   },
   "endpoints": [
     {"path": "/", "method": "GET", "description": "Service information"},
-    {"path": "/health", "method": "GET", "description": "Health check"}
+    {"path": "/health", "method": "GET", "description": "Health check"},
+    {"path": "/visits", "method": "GET", "description": "Current persisted visit counter"},
+    {"path": "/metrics", "method": "GET", "description": "Prometheus metrics endpoint"}
   ]
 }
 ```
@@ -149,6 +158,18 @@ Simple health check endpoint for monitoring and probes.
 }
 ```
 
+### GET /visits
+
+Returns the current visit count persisted in the file configured by `VISITS_FILE`.
+
+**Response (200 OK):**
+```json
+{
+  "visits": 3,
+  "path": "data/visits"
+}
+```
+
 ## Configuration
 
 The application supports the following environment variables:
@@ -158,6 +179,7 @@ The application supports the following environment variables:
 | `HOST` | `0.0.0.0` | Server bind address (0.0.0.0 for all interfaces) |
 | `PORT` | `5000` | Server port number |
 | `DEBUG` | `False` | Enable debug mode (true/false) |
+| `VISITS_FILE` | `data/visits` | File used to persist the visits counter |
 
 ## Docker
 
@@ -189,6 +211,22 @@ docker run -e DEBUG=true -p 5000:5000 devops-info-service:latest
 ```bash
 docker run -d -p 5000:5000 --name devops-service devops-info-service:latest
 ```
+
+### Docker Compose with Persistent Visits
+
+Use the included Compose file to keep the visits counter on the host:
+
+```bash
+mkdir -p data
+docker compose up -d
+curl http://localhost:5000/
+curl http://localhost:5000/visits
+cat ./data/visits
+docker compose restart
+curl http://localhost:5000/visits
+```
+
+The Compose setup mounts `./data` into the container at `/app/data`, so the counter survives container recreation. The repository keeps the `data/` directory present with a `.gitignore`; if it is missing, create it before starting Compose so the non-root container user can write the visits file.
 
 ### Pulling from Docker Hub
 

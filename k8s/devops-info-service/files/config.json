@@ -1,0 +1,13 @@
+{
+  "appName": "devops-info-service",
+  "environment": "kubernetes",
+  "features": {
+    "visitsCounter": true,
+    "metricsEnabled": true,
+    "structuredLogging": true
+  },
+  "settings": {
+    "welcomeMessage": "DevOps Info Service is running",
+    "runtimeTimezone": "UTC"
+  }
+}

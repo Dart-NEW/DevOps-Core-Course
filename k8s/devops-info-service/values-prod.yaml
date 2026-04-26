@@ -11,6 +11,14 @@ env:
 appEnv: "production"
 logLevel: "info"
 
+persistence:
+  enabled: true
+  size: 200Mi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+  mountPath: /data
+  visitsFile: /data/visits
+
 secrets:
   username: "prod-user"
   password: "prod-password"

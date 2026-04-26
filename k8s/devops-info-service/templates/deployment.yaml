@@ -16,8 +16,9 @@ spec:
       {{- include "devops-info-service.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- if or .Values.podAnnotations .Values.vault.enabled }}
       annotations:
+        checksum/config-file: {{ .Files.Get "files/config.json" | sha256sum }}
+        checksum/config-env: {{ printf "%s|%s|%s|%s|%t" .Values.appEnv .Values.logLevel .Values.config.mountFile .Values.persistence.visitsFile .Values.features.visitsCounter | sha256sum }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -34,7 +35,6 @@ spec:
           {{`{{- end -}}`}}
         {{- end }}
         {{- end }}
-      {{- end }}
       labels:
         {{- include "devops-info-service.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -64,6 +64,8 @@ spec:
               value: {{ .value | quote }}
             {{- end }}
           envFrom:
+            - configMapRef:
+                name: {{ include "devops-info-service.configEnvName" . }}
             - secretRef:
                 name: {{ include "devops-info-service.fullname" . }}-app-secrets
           resources:
@@ -74,11 +76,16 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           startupProbe:
             {{- toYaml .Values.startupProbe | nindent 12 }}
-          {{- if .Values.scratchVolume.enabled }}
           volumeMounts:
+            - name: config-volume
+              mountPath: {{ .Values.config.mountDir | quote }}
+              readOnly: true
+            - name: data-volume
+              mountPath: {{ .Values.persistence.mountPath | quote }}
+            {{- if .Values.scratchVolume.enabled }}
             - name: scratch
               mountPath: {{ .Values.scratchVolume.mountPath | quote }}
-          {{- end }}
+            {{- end }}
       restartPolicy: Always
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       {{- if .Values.podAntiAffinity.enabled }}
@@ -92,8 +99,18 @@ spec:
                     {{- include "devops-info-service.selectorLabels" . | nindent 20 }}
                 topologyKey: {{ .Values.podAntiAffinity.topologyKey }}
       {{- end }}
-      {{- if .Values.scratchVolume.enabled }}
       volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "devops-info-service.configFileName" . }}
+        - name: data-volume
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "devops-info-service.pvcName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.scratchVolume.enabled }}
         - name: scratch
           emptyDir: {}
-      {{- end }}
+        {{- end }}
