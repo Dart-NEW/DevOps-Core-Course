@@ -1,0 +1,66 @@
+# Self-healing scale test
+2026-04-26T17:35:27+03:00
+$ kubectl get deploy -n dev devops-info-service-dev -o jsonpath replicas
+desired=1 ready=1
+$ kubectl scale deployment/devops-info-service-dev -n dev --replicas=5
+deployment.apps/devops-info-service-dev scaled
+2026-04-26T17:35:27+03:00
+after-scale desired=5 ready=1
+$ argocd app get devops-info-service-dev after manual scale
+Name:               argocd/devops-info-service-dev
+Project:            default
+Server:             https://kubernetes.default.svc
+Namespace:          dev
+URL:                https://argocd.example.com/applications/devops-info-service-dev
+Source:
+- Repo:             https://github.com/Dart-NEW/DevOps-Core-Course.git
+  Target:           lab12
+  Path:             k8s/devops-info-service
+  Helm Values:      values-dev.yaml
+SyncWindow:         Sync Allowed
+Sync Policy:        Automated (Prune)
+Sync Status:        OutOfSync from lab12 (c8709b5)
+Health Status:      Progressing
+
+GROUP  KIND                   NAMESPACE  NAME                                 STATUS     HEALTH       HOOK  MESSAGE
+       ConfigMap              dev        devops-info-service-dev-config       Synced                        
+       ConfigMap              dev        devops-info-service-dev-env          Synced                        
+       PersistentVolumeClaim  dev        devops-info-service-dev-data         Synced     Healthy            
+       Secret                 dev        devops-info-service-dev-app-secrets  Synced                        
+       Service                dev        devops-info-service-dev              Synced     Healthy            
+apps   Deployment             dev        devops-info-service-dev              OutOfSync  Progressing        
+$ argocd app wait devops-info-service-dev --sync --health
+TIMESTAMP                  GROUP        KIND              NAMESPACE                  NAME                   STATUS    HEALTH            HOOK  MESSAGE
+2026-04-26T17:35:28+03:00          ConfigMap                    dev  devops-info-service-dev-env            Synced                            
+2026-04-26T17:35:28+03:00         PersistentVolumeClaim         dev  devops-info-service-dev-data           Synced   Healthy                  
+2026-04-26T17:35:28+03:00             Secret                    dev  devops-info-service-dev-app-secrets    Synced                            
+2026-04-26T17:35:28+03:00            Service                    dev  devops-info-service-dev                Synced   Healthy                  
+2026-04-26T17:35:28+03:00   apps  Deployment                    dev  devops-info-service-dev              OutOfSync  Progressing              deployment.apps/devops-info-service-dev configured
+2026-04-26T17:35:28+03:00          ConfigMap                    dev  devops-info-service-dev-config         Synced                            
+2026-04-26T17:35:28+03:00   apps  Deployment         dev  devops-info-service-dev    Synced  Progressing              deployment.apps/devops-info-service-dev configured
+
+Name:               argocd/devops-info-service-dev
+Project:            default
+Server:             https://kubernetes.default.svc
+Namespace:          dev
+URL:                https://argocd.example.com/applications/devops-info-service-dev
+Source:
+- Repo:             https://github.com/Dart-NEW/DevOps-Core-Course.git
+  Target:           lab12
+  Path:             k8s/devops-info-service
+  Helm Values:      values-dev.yaml
+SyncWindow:         Sync Allowed
+Sync Policy:        Automated (Prune)
+Sync Status:        Synced to lab12 (c8709b5)
+Health Status:      Healthy
+
+
+GROUP  KIND                   NAMESPACE  NAME                                 STATUS  HEALTH   HOOK  MESSAGE
+apps   Deployment             dev        devops-info-service-dev              Synced  Healthy        deployment.apps/devops-info-service-dev configured
+       ConfigMap              dev        devops-info-service-dev-config       Synced                 
+       ConfigMap              dev        devops-info-service-dev-env          Synced                 
+       PersistentVolumeClaim  dev        devops-info-service-dev-data         Synced  Healthy        
+       Secret                 dev        devops-info-service-dev-app-secrets  Synced                 
+       Service                dev        devops-info-service-dev              Synced  Healthy        
+2026-04-26T17:35:28+03:00
+after-self-heal desired=1 ready=1

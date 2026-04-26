@@ -1,0 +1,5 @@
+$ .tools/argocd app list
+NAME                             CLUSTER                         NAMESPACE  PROJECT  STATUS  HEALTH   SYNCPOLICY  CONDITIONS  REPO                                                PATH                     TARGET
+argocd/devops-info-service       https://kubernetes.default.svc  lab13      default  Synced  Healthy  Manual      <none>      https://github.com/Dart-NEW/DevOps-Core-Course.git  k8s/devops-info-service  lab12
+argocd/devops-info-service-dev   https://kubernetes.default.svc  dev        default  Synced  Healthy  Auto-Prune  <none>      https://github.com/Dart-NEW/DevOps-Core-Course.git  k8s/devops-info-service  lab12
+argocd/devops-info-service-prod  https://kubernetes.default.svc  prod       default  Synced  Healthy  Manual      <none>      https://github.com/Dart-NEW/DevOps-Core-Course.git  k8s/devops-info-service  lab12

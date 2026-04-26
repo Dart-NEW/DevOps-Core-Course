@@ -1,0 +1,32 @@
+$ kubectl get pods,svc,pvc,configmap -n dev
+NAME                                           READY   STATUS    RESTARTS   AGE
+pod/devops-info-service-dev-867dc55bdf-lb5m6   1/1     Running   0          11m
+
+NAME                              TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/devops-info-service-dev   NodePort   10.96.98.250   <none>        80:30084/TCP   11m
+
+NAME                                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/devops-info-service-dev-data   Bound    pvc-da22dc4d-0f53-4eb4-abd7-064ce3a22a4f   100Mi      RWO            standard       <unset>                 11m
+
+NAME                                       DATA   AGE
+configmap/devops-info-service-dev-config   1      11m
+configmap/devops-info-service-dev-env      5      11m
+configmap/kube-root-ca.crt                 1      11m
+
+$ kubectl get pods,svc,pvc,configmap -n prod
+NAME                                            READY   STATUS    RESTARTS   AGE
+pod/devops-info-service-prod-7cbd74c86d-d7n46   1/1     Running   0          10m
+pod/devops-info-service-prod-7cbd74c86d-l9cjt   1/1     Running   0          10m
+pod/devops-info-service-prod-7cbd74c86d-zlkfm   1/1     Running   0          10m
+pod/devops-info-service-prod-7cbd74c86d-zrffj   1/1     Running   0          10m
+
+NAME                               TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/devops-info-service-prod   NodePort   10.96.255.31   <none>        80:30085/TCP   10m
+
+NAME                                                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/devops-info-service-prod-data   Bound    pvc-fd484015-2d1b-43b5-860e-c28396041926   200Mi      RWO            standard       <unset>                 10m
+
+NAME                                        DATA   AGE
+configmap/devops-info-service-prod-config   1      10m
+configmap/devops-info-service-prod-env      5      10m
+configmap/kube-root-ca.crt                  1      11m
