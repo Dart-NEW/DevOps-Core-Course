@@ -1,6 +1,6 @@
-{{- if and (not .Values.rollout.enabled) (not .Values.statefulset.enabled) }}
+{{- if .Values.statefulset.enabled }}
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "devops-info-service.fullname" . }}
   labels:
@@ -9,9 +9,16 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  serviceName: {{ include "devops-info-service.headlessServiceName" . }}
   replicas: {{ .Values.replicaCount }}
-  strategy:
-    {{- toYaml .Values.strategy | nindent 4 }}
+  podManagementPolicy: {{ .Values.statefulset.podManagementPolicy }}
+  revisionHistoryLimit: {{ .Values.statefulset.revisionHistoryLimit }}
+  updateStrategy:
+    type: {{ .Values.statefulset.updateStrategy.type }}
+    {{- if eq .Values.statefulset.updateStrategy.type "RollingUpdate" }}
+    rollingUpdate:
+      partition: {{ .Values.statefulset.updateStrategy.rollingUpdate.partition }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "devops-info-service.selectorLabels" . | nindent 6 }}
@@ -104,15 +111,25 @@ spec:
         - name: config-volume
           configMap:
             name: {{ include "devops-info-service.configFileName" . }}
-        - name: data-volume
-          {{- if .Values.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ include "devops-info-service.pvcName" . }}
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
         {{- if .Values.scratchVolume.enabled }}
         - name: scratch
           emptyDir: {}
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data-volume
+        labels:
+          {{- include "devops-info-service.labels" . | nindent 10 }}
+          {{- with .Values.commonLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass | quote }}
         {{- end }}
 {{- end }}

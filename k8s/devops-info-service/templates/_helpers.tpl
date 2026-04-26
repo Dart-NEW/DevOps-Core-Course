@@ -35,6 +35,13 @@ Name for the PVC used by the visit counter.
 {{- end -}}
 
 {{/*
+Name for the headless service used by StatefulSet pods.
+*/}}
+{{- define "devops-info-service.headlessServiceName" -}}
+{{- printf "%s-headless" (include "devops-info-service.fullname" .) -}}
+{{- end -}}
+
+{{/*
 Name for the blue-green preview service.
 */}}
 {{- define "devops-info-service.previewServiceName" -}}
