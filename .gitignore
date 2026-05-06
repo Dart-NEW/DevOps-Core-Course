@@ -1,4 +1,9 @@
 test
+!edge-api/test/
+!edge-api/test/**
+node_modules/
+dist-test/
+.wrangler/
 
 # Terraform
 *.tfstate
