@@ -1,0 +1,94 @@
+# Canary rollout v2 with manual promotion
+2026-04-26T17:59:18+03:00
+$ helm upgrade ... --set podLabels.version=canary-v2
+Release "lab14-canary" has been upgraded. Happy Helming!
+NAME: lab14-canary
+LAST DEPLOYED: Sun Apr 26 17:59:18 2026
+NAMESPACE: lab14-canary
+STATUS: deployed
+REVISION: 3
+DESCRIPTION: Upgrade complete
+NOTES:
+Release lab14-canary is ready in namespace lab14-canary.
+
+Useful commands:
+  helm get values lab14-canary -n lab14-canary
+  kubectl get all -n lab14-canary -l app.kubernetes.io/instance=lab14-canary
+  kubectl port-forward -n lab14-canary service/lab14-canary-devops-info-service 8080:80
+
+Health check:
+  curl http://127.0.0.1:8080/health
+$ kubectl argo rollouts get rollout at first pause
+Name:            lab14-canary-devops-info-service
+Namespace:       lab14-canary
+Status:          ◌ Progressing
+Message:         more replicas need to be updated
+Strategy:        Canary
+  Step:          0/10
+  SetWeight:     20
+  ActualWeight:  0
+Images:          devops-info-service-python:lab12 (canary, stable)
+Replicas:
+  Desired:       5
+  Current:       5
+  Updated:       1
+  Ready:         4
+  Available:     4
+
+NAME                                                          KIND        STATUS         AGE    INFO
+⟳ lab14-canary-devops-info-service                            Rollout     ◌ Progressing  3m35s  
+├──# revision:2                                                                                 
+│  └──⧉ lab14-canary-devops-info-service-5ddd586487           ReplicaSet  ◌ Progressing  6s     canary
+│     └──□ lab14-canary-devops-info-service-5ddd586487-v4nj4  Pod         ✔ Running      6s     ready:0/1
+└──# revision:1                                                                                 
+   └──⧉ lab14-canary-devops-info-service-755df94f68           ReplicaSet  ✔ Healthy      3m35s  stable
+      ├──□ lab14-canary-devops-info-service-755df94f68-8gsf9  Pod         ◌ Terminating  3m35s  ready:1/1
+      ├──□ lab14-canary-devops-info-service-755df94f68-9wbzr  Pod         ✔ Running      3m35s  ready:1/1
+      ├──□ lab14-canary-devops-info-service-755df94f68-ddw2v  Pod         ✔ Running      3m35s  ready:1/1
+      ├──□ lab14-canary-devops-info-service-755df94f68-mxkr9  Pod         ✔ Running      3m35s  ready:1/1
+      └──□ lab14-canary-devops-info-service-755df94f68-v7xht  Pod         ✔ Running      3m35s  ready:1/1
+$ kubectl argo rollouts promote
+rollout 'lab14-canary-devops-info-service' promoted
+$ kubectl argo rollouts status
+Paused - CanaryPauseStep
+Progressing - waiting for rollout to unpause
+2026-04-26T18:02:28+03:00
+$ kubectl argo rollouts get rollout after promotion/progression
+Name:            lab14-canary-devops-info-service
+Namespace:       lab14-canary
+Status:          ◌ Progressing
+Message:         more replicas need to be updated
+Strategy:        Canary
+  Step:          2/10
+  SetWeight:     20
+  ActualWeight:  20
+Images:          devops-info-service-python:lab12 (canary, stable)
+Replicas:
+  Desired:       5
+  Current:       5
+  Updated:       1
+  Ready:         5
+  Available:     5
+
+NAME                                                          KIND        STATUS         AGE    INFO
+⟳ lab14-canary-devops-info-service                            Rollout     ◌ Progressing  7m35s  
+├──# revision:2                                                                                 
+│  └──⧉ lab14-canary-devops-info-service-5ddd586487           ReplicaSet  ✔ Healthy      4m6s   canary
+│     └──□ lab14-canary-devops-info-service-5ddd586487-v4nj4  Pod         ✔ Running      4m6s   ready:1/1
+└──# revision:1                                                                                 
+   └──⧉ lab14-canary-devops-info-service-755df94f68           ReplicaSet  ✔ Healthy      7m35s  stable
+      ├──□ lab14-canary-devops-info-service-755df94f68-9wbzr  Pod         ✔ Running      7m35s  ready:1/1
+      ├──□ lab14-canary-devops-info-service-755df94f68-ddw2v  Pod         ✔ Running      7m35s  ready:1/1
+      ├──□ lab14-canary-devops-info-service-755df94f68-mxkr9  Pod         ✔ Running      7m35s  ready:1/1
+      └──□ lab14-canary-devops-info-service-755df94f68-v7xht  Pod         ✔ Running      7m35s  ready:1/1
+$ kubectl get analysisrun,rs,pods -n lab14-canary
+NAME                                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/lab14-canary-devops-info-service-5ddd586487   1         1         1       4m8s
+replicaset.apps/lab14-canary-devops-info-service-755df94f68   4         4         4       7m37s
+
+NAME                                                    READY   STATUS    RESTARTS   AGE
+pod/lab14-canary-devops-info-service-5ddd586487-v4nj4   1/1     Running   0          4m8s
+pod/lab14-canary-devops-info-service-755df94f68-9wbzr   1/1     Running   0          7m37s
+pod/lab14-canary-devops-info-service-755df94f68-ddw2v   1/1     Running   0          7m37s
+pod/lab14-canary-devops-info-service-755df94f68-mxkr9   1/1     Running   0          7m37s
+pod/lab14-canary-devops-info-service-755df94f68-v7xht   1/1     Running   0          7m37s

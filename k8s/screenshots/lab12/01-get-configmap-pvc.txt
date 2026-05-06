@@ -1,0 +1,8 @@
+$ kubectl get configmap,pvc -n lab12
+NAME                                                DATA   AGE
+configmap/kube-root-ca.crt                          1      4d21h
+configmap/lab12-devops-devops-info-service-config   1      4d21h
+configmap/lab12-devops-devops-info-service-env      5      4d21h
+
+NAME                                                          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/lab12-devops-devops-info-service-data   Bound    pvc-8ce15048-3fcc-4d90-8706-c97019dd939a   100Mi      RWO            standard       <unset>                 4d21h

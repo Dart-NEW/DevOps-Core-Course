@@ -1,0 +1,2 @@
+$ kubectl apply --dry-run=server -f k8s/argocd/applicationset.yaml
+applicationset.argoproj.io/devops-info-service-set created (server dry run)

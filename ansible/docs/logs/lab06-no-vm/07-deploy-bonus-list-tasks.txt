@@ -1,0 +1,20 @@
+
+playbook: playbooks/deploy_bonus.yml
+
+  play #1 (webservers): Deploy Bonus Application	TAGS: []
+    tasks:
+      docker : Install apt dependencies for Docker repo	TAGS: [app_deploy, bonus_app, docker_install]
+      docker : Create apt keyrings directory	TAGS: [app_deploy, bonus_app, docker_install]
+      docker : Add Docker GPG key	TAGS: [app_deploy, bonus_app, docker_install]
+      docker : Add Docker apt repository	TAGS: [app_deploy, bonus_app, docker_install]
+      docker : Install Docker packages	TAGS: [app_deploy, bonus_app, docker_install]
+      docker : Add users to docker group	TAGS: [app_deploy, bonus_app, docker_config]
+      docker : Install python3-docker package	TAGS: [app_deploy, bonus_app, docker_config]
+      web_app : Include wipe tasks	TAGS: [app_deploy, bonus_app, web_app_wipe]
+      web_app : Validate required image variables	TAGS: [app_deploy, bonus_app, compose]
+      web_app : Create compose project directory	TAGS: [app_deploy, bonus_app, compose]
+      web_app : Render docker-compose.yml	TAGS: [app_deploy, bonus_app, compose]
+      web_app : Pull and start services via Docker Compose v2	TAGS: [app_deploy, bonus_app, compose]
+      web_app : Wait for application port	TAGS: [app_deploy, bonus_app, compose]
+      web_app : Verify health endpoint	TAGS: [app_deploy, bonus_app, compose]
+      web_app : Show health endpoint response summary	TAGS: [app_deploy, bonus_app, compose]

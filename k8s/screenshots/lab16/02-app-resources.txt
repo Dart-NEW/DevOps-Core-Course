@@ -1,0 +1,18 @@
+$ kubectl get po,sts,svc,pvc,servicemonitor -n default -l app.kubernetes.io/instance=lab16-app
+NAME                                  READY   STATUS    RESTARTS   AGE
+pod/lab16-app-devops-info-service-0   1/1     Running   0          2m11s
+pod/lab16-app-devops-info-service-1   1/1     Running   0          118s
+
+NAME                                             READY   AGE
+statefulset.apps/lab16-app-devops-info-service   2/2     2m11s
+
+NAME                                             TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/lab16-app-devops-info-service            ClusterIP   10.96.26.171   <none>        80/TCP    2m11s
+service/lab16-app-devops-info-service-headless   ClusterIP   None           <none>        80/TCP    2m11s
+
+NAME                                                                STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/data-volume-lab16-app-devops-info-service-0   Bound    pvc-451a13c2-0263-41e9-b5b5-9706eebde1c1   100Mi      RWO            standard       <unset>                 2m11s
+persistentvolumeclaim/data-volume-lab16-app-devops-info-service-1   Bound    pvc-ba27e411-af4a-457d-a9c8-2b3c951f2c4c   100Mi      RWO            standard       <unset>                 118s
+
+NAME                                                                         AGE
+servicemonitor.monitoring.coreos.com/lab16-app-devops-info-service-monitor   2m11s

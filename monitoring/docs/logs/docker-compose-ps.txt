@@ -1,0 +1,6 @@
+NAME                      IMAGE                              COMMAND                  SERVICE      CREATED         STATUS                   PORTS
+monitoring-app-go-1       devops-info-service-go:lab07       "./devops-info-servi…"   app-go       5 minutes ago   Up 4 minutes (healthy)   5000/tcp, 0.0.0.0:8001->8080/tcp, [::]:8001->8080/tcp
+monitoring-app-python-1   devops-info-service-python:lab07   "python app.py"          app-python   5 minutes ago   Up 4 minutes (healthy)   0.0.0.0:8000->5000/tcp, [::]:8000->5000/tcp
+monitoring-grafana-1      grafana/grafana:12.3.1             "/run.sh"                grafana      8 minutes ago   Up 8 minutes (healthy)   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+monitoring-loki-1         grafana/loki:3.0.0                 "/usr/bin/loki -conf…"   loki         8 minutes ago   Up 8 minutes (healthy)   0.0.0.0:3100->3100/tcp, [::]:3100->3100/tcp
+monitoring-promtail-1     grafana/promtail:3.0.0             "/usr/bin/promtail -…"   promtail     5 minutes ago   Up 5 minutes             0.0.0.0:9080->9080/tcp, [::]:9080->9080/tcp

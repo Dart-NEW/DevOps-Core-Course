@@ -1,0 +1,10 @@
+$ kubectl exec -n dev deploy/devops-info-service-dev -- python request /health and /visits
+{
+  "status": "healthy",
+  "timestamp": "2026-04-26T14:46:29.107805+00:00",
+  "uptime_seconds": 899
+}
+{
+  "visits": 0,
+  "path": "/data/visits"
+}

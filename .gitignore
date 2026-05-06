@@ -1,1 +1,42 @@
 test
+!edge-api/test/
+!edge-api/test/**
+node_modules/
+dist-test/
+.wrangler/
+
+# Nix build outputs
+result
+result-*
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+*.tfvars.json
+
+# Pulumi
+pulumi/venv/
+pulumi/.pulumi/
+pulumi/Pulumi.*.yaml
+!pulumi/Pulumi.dev.yaml.example
+
+# Credentials and keys
+*.pem
+*.key
+*.p12
+*.creds
+credentials
+
+# Ansible
+*.retry
+.vault_pass
+ansible/.vault_pass
+ansible/inventory/*.pyc
+__pycache__/
+
+# Monitoring
+monitoring/.env
