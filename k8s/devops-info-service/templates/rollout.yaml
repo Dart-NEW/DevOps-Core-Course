@@ -1,0 +1,186 @@
+{{- if .Values.rollout.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "devops-info-service.fullname" . }}
+  labels:
+    {{- include "devops-info-service.labels" . | nindent 4 }}
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.rollout.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "devops-info-service.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- if eq .Values.rollout.strategy "blueGreen" }}
+    blueGreen:
+      activeService: {{ include "devops-info-service.fullname" . }}
+      previewService: {{ include "devops-info-service.previewServiceName" . }}
+      autoPromotionEnabled: {{ .Values.rollout.blueGreen.autoPromotionEnabled }}
+      scaleDownDelaySeconds: {{ .Values.rollout.blueGreen.scaleDownDelaySeconds }}
+    {{- else }}
+    canary:
+      steps:
+        - setWeight: 20
+        - pause: {}
+        {{- if .Values.rollout.analysis.enabled }}
+        - analysis:
+            templates:
+              - templateName: {{ include "devops-info-service.analysisTemplateName" . }}
+        {{- end }}
+        - setWeight: 40
+        - pause:
+            duration: {{ .Values.rollout.canary.pauseDuration | quote }}
+        - setWeight: 60
+        - pause:
+            duration: {{ .Values.rollout.canary.pauseDuration | quote }}
+        - setWeight: 80
+        - pause:
+            duration: {{ .Values.rollout.canary.pauseDuration | quote }}
+        - setWeight: 100
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        checksum/config-file: {{ .Files.Get "files/config.json" | sha256sum }}
+        checksum/config-env: {{ printf "%s|%s|%s|%s|%t" .Values.appEnv .Values.logLevel .Values.config.mountFile .Values.persistence.visitsFile .Values.features.visitsCounter | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.vault.enabled }}
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: {{ .Values.vault.role | quote }}
+        vault.hashicorp.com/agent-inject-secret-config: {{ .Values.vault.secretPath | quote }}
+        {{- if .Values.vault.template.enabled }}
+        vault.hashicorp.com/agent-inject-template-config: |
+          {{`{{- with secret "`}}{{ .Values.vault.secretPath }}{{`" -}}`}}
+          APP_USERNAME={{`{{ .Data.data.username }}`}}
+          APP_PASSWORD={{`{{ .Data.data.password }}`}}
+          APP_API_KEY={{`{{ .Data.data.api_key }}`}}
+          {{`{{- end -}}`}}
+        {{- end }}
+        {{- end }}
+      labels:
+        {{- include "devops-info-service.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.initContainers.enabled }}
+      initContainers:
+        {{- if .Values.initContainers.download.enabled }}
+        - name: init-download
+          image: {{ .Values.initContainers.download.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - wget -O {{ printf "%s/%s" .Values.initContainers.download.mountPath .Values.initContainers.download.outputFile | quote }} {{ .Values.initContainers.download.url | quote }}
+          volumeMounts:
+            - name: init-workdir
+              mountPath: {{ .Values.initContainers.download.mountPath | quote }}
+        {{- end }}
+        {{- if .Values.initContainers.waitForService.enabled }}
+        - name: wait-for-service
+          image: {{ .Values.initContainers.waitForService.image | quote }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              i=0
+              until nslookup {{ .Values.initContainers.waitForService.host | quote }} >/dev/null 2>&1; do
+                i=$((i+1))
+                if [ "$((i * {{ .Values.initContainers.waitForService.intervalSeconds }}))" -ge "{{ .Values.initContainers.waitForService.timeoutSeconds }}" ]; then
+                  echo "Timed out waiting for {{ .Values.initContainers.waitForService.host }}"
+                  exit 1
+                fi
+                sleep {{ .Values.initContainers.waitForService.intervalSeconds }}
+              done
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          env:
+            {{- include "devops-info-service.commonEnv" . | nindent 12 }}
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "devops-info-service.configEnvName" . }}
+            - secretRef:
+                name: {{ include "devops-info-service.fullname" . }}-app-secrets
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: {{ .Values.config.mountDir | quote }}
+              readOnly: true
+            - name: data-volume
+              mountPath: {{ .Values.persistence.mountPath | quote }}
+            {{- if and .Values.initContainers.enabled .Values.initContainers.download.enabled }}
+            - name: init-workdir
+              mountPath: {{ .Values.initContainers.download.mainMountPath | quote }}
+            {{- end }}
+            {{- if .Values.scratchVolume.enabled }}
+            - name: scratch
+              mountPath: {{ .Values.scratchVolume.mountPath | quote }}
+            {{- end }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- if .Values.podAntiAffinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.podAntiAffinity.weight }}
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "devops-info-service.selectorLabels" . | nindent 20 }}
+                topologyKey: {{ .Values.podAntiAffinity.topologyKey }}
+      {{- end }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "devops-info-service.configFileName" . }}
+        - name: data-volume
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "devops-info-service.pvcName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if and .Values.initContainers.enabled .Values.initContainers.download.enabled }}
+        - name: init-workdir
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.scratchVolume.enabled }}
+        - name: scratch
+          emptyDir: {}
+        {{- end }}
+{{- end }}

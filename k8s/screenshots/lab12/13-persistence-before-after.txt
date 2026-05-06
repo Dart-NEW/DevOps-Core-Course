@@ -1,0 +1,19 @@
+$ kubectl exec -n lab12 lab12-devops-devops-info-service-666b4d8b78-4vh6p -- python generate 3 visits then GET /visits
+{
+  "visits": 9,
+  "path": "/data/visits"
+}
+
+$ kubectl exec -n lab12 lab12-devops-devops-info-service-666b4d8b78-4vh6p -- cat /data/visits
+BEFORE=9
+
+$ kubectl delete pod -n lab12 lab12-devops-devops-info-service-666b4d8b78-4vh6p
+pod "lab12-devops-devops-info-service-666b4d8b78-4vh6p" deleted from lab12 namespace
+
+$ kubectl wait --for=condition=ready pod -n lab12 -l app.kubernetes.io/instance=lab12-devops --timeout=180s
+pod/lab12-devops-devops-info-service-666b4d8b78-z5xfz condition met
+
+lab12-devops-devops-info-service-666b4d8b78-z5xfz
+
+$ kubectl exec -n lab12 lab12-devops-devops-info-service-666b4d8b78-z5xfz -- cat /data/visits
+AFTER=9

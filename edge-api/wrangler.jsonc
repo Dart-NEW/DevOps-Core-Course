@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "devops-core-edge-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-06",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "APP_NAME": "devops-core-edge-api",
+    "COURSE_NAME": "DevOps Core",
+    "ENVIRONMENT": "lab17"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SETTINGS",
+      "id": "cd4645e1da974785ad22515fecb94256"
+    }
+  ]
+}

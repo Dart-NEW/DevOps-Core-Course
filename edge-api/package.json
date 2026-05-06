@@ -1,0 +1,24 @@
+{
+  "name": "edge-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Workers edge API for DevOps Core Lab 17.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "deployments": "wrangler deployments list",
+    "rollback": "wrangler rollback",
+    "typecheck": "tsc --noEmit",
+    "build:test": "tsc -p tsconfig.test.json",
+    "test": "npm run build:test && node --test dist-test/test/*.test.js",
+    "check": "npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260501.0",
+    "@types/node": "^25.6.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.14.3"
+  }
+}

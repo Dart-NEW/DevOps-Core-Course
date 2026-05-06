@@ -1,0 +1,15 @@
+$ docker compose -f /tmp/lab12-compose.yml up -d --build
+$ curl -fsS http://localhost:5001/ >/dev/null # twice
+$ curl -fsS http://localhost:5001/visits
+{
+  "visits": 2,
+  "path": "/app/data/visits"
+}
+$ cat ./data/visits
+2
+$ docker compose -f /tmp/lab12-compose.yml restart devops-info-service
+$ curl -fsS http://localhost:5001/visits
+{
+  "visits": 2,
+  "path": "/app/data/visits"
+}

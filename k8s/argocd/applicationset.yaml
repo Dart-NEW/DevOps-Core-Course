@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: devops-info-service-set
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: dev
+            valuesFile: values-dev.yaml
+            nodePort: "30084"
+            syncPolicy: |
+              automated:
+                prune: true
+                selfHeal: true
+              syncOptions:
+                - CreateNamespace=true
+          - env: prod
+            namespace: prod
+            valuesFile: values-prod.yaml
+            nodePort: "30085"
+            syncPolicy: |
+              syncOptions:
+                - CreateNamespace=true
+  template:
+    metadata:
+      name: 'devops-info-service-{{ .env }}-set'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/Dart-NEW/DevOps-Core-Course.git
+        targetRevision: lab12
+        path: k8s/devops-info-service
+        helm:
+          valueFiles:
+            - '{{ .valuesFile }}'
+          parameters:
+            - name: service.type
+              value: NodePort
+            - name: service.nodePort
+              value: '{{ .nodePort }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .namespace }}'
+  templatePatch: |
+    spec:
+      syncPolicy:
+        {{ .syncPolicy | nindent 8 }}
