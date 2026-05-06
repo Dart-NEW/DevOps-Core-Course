@@ -5,6 +5,10 @@ node_modules/
 dist-test/
 .wrangler/
 
+# Nix build outputs
+result
+result-*
+
 # Terraform
 *.tfstate
 *.tfstate.*
