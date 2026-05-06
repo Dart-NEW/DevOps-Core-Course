@@ -1,0 +1,58 @@
+--- Q1 CPU per StatefulSet pod
+lab16-app-devops-info-service-0 = 0.0037459868850271616
+lab16-app-devops-info-service-1 = 0.0029387161827956984
+
+--- Q1 Memory per StatefulSet pod MiB
+lab16-app-devops-info-service-0 = 29.0703125
+lab16-app-devops-info-service-1 = 29.28125
+
+--- Q2 Most CPU pod in default namespace
+lab16-app-devops-info-service-0 = 0.003746451325940345
+
+--- Q2 Least CPU pod in default namespace
+lab10-go-devops-info-service-go-5b99ffd484-rxxp4 = 0.000241783676974745
+
+--- Q3 Node memory usage percent
+monitoring-prometheus-node-exporter-js8ww = 68.31392675165094
+
+--- Q3 Node memory used MiB
+monitoring-prometheus-node-exporter-js8ww = 10735.05859375
+
+--- Q3 CPU cores
+172.25.0.2:10250 = 16
+
+--- Q4 Kubelet running pods
+value = 49
+
+--- Q4 Kubelet running containers
+value = 93
+
+--- Q5 Pod receive traffic bytes/s in default
+devops-info-service-54b955b486-gfkbj = 174.00120416058246
+lab16-app-devops-info-service-0 = 244.2192099186202
+lab10-go-devops-info-service-go-5b99ffd484-rxxp4 = 137.2630760806204
+lab10-go-devops-info-service-go-5b99ffd484-njzqt = 133.8548972665334
+lab10-python-devops-info-service-85b54f84d5-scfmx = 172.56048451475792
+lab10-python-devops-info-service-85b54f84d5-kbv74 = 172.94970564590267
+devops-info-service-54b955b486-fk6zt = 174.09823633844442
+lab10-python-devops-info-service-85b54f84d5-kj6rq = 172.9273292515714
+devops-info-service-54b955b486-m7s9f = 168.41180424910283
+lab10-python-devops-info-service-85b54f84d5-7bm2w = 173.17546904702868
+lab16-app-devops-info-service-1 = 91.02858051884483
+
+--- Q5 Pod transmit traffic bytes/s in default
+devops-info-service-54b955b486-gfkbj = 182.73136838317217
+lab16-app-devops-info-service-0 = 785.2206931897166
+lab10-go-devops-info-service-go-5b99ffd484-rxxp4 = 171.97011181572486
+lab10-go-devops-info-service-go-5b99ffd484-njzqt = 165.00384129692563
+lab10-python-devops-info-service-85b54f84d5-scfmx = 180.90537841184465
+lab10-python-devops-info-service-85b54f84d5-kbv74 = 181.6271130226002
+devops-info-service-54b955b486-fk6zt = 182.83326895750133
+lab10-python-devops-info-service-85b54f84d5-kj6rq = 181.28996348135377
+devops-info-service-54b955b486-m7s9f = 176.8536064031971
+lab10-python-devops-info-service-85b54f84d5-7bm2w = 181.86420365319447
+lab16-app-devops-info-service-1 = 74.92145351907669
+
+--- Q6 Active firing alerts (Prometheus)
+value = 3
+

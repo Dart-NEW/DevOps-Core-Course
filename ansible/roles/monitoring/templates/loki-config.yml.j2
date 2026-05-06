@@ -1,0 +1,38 @@
+auth_enabled: false
+
+server:
+  http_listen_port: {{ monitoring_loki_port }}
+
+common:
+  path_prefix: /loki
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: {{ monitoring_loki_schema }}
+      index:
+        prefix: {{ monitoring_loki_index_prefix }}
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  delete_request_store: filesystem
+
+limits_config:
+  retention_period: {{ monitoring_retention_period }}

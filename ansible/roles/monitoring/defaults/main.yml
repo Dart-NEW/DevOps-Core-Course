@@ -1,0 +1,45 @@
+---
+monitoring_project_dir: /opt/monitoring
+
+monitoring_loki_image: grafana/loki:3.0.0
+monitoring_promtail_image: grafana/promtail:3.0.0
+monitoring_grafana_image: grafana/grafana:12.3.1
+monitoring_prometheus_image: prom/prometheus:v3.9.0
+
+monitoring_loki_port: 3100
+monitoring_promtail_port: 9080
+monitoring_grafana_port: 3000
+monitoring_prometheus_port: 9090
+
+monitoring_retention_period: 168h
+monitoring_loki_schema: v13
+monitoring_loki_index_prefix: index_
+
+monitoring_grafana_admin_user: admin
+monitoring_grafana_admin_password: change-me-now
+monitoring_prometheus_retention_time: 15d
+monitoring_prometheus_retention_size: 10GB
+monitoring_prometheus_scrape_interval: 15s
+
+monitoring_prometheus_targets:
+  - job: prometheus
+    targets: ["localhost:9090"]
+  - job: app
+    metrics_path: /metrics
+    targets: ["app-python:5000"]
+  - job: loki
+    metrics_path: /metrics
+    targets: ["loki:3100"]
+  - job: grafana
+    metrics_path: /metrics
+    targets: ["grafana:3000"]
+
+monitoring_include_apps: true
+monitoring_python_image: devops-info-service-python:lab07
+monitoring_bonus_image: devops-info-service-go:lab07
+monitoring_python_app_name: devops-python
+monitoring_bonus_app_name: devops-go
+monitoring_python_port: 8000
+monitoring_bonus_port: 8001
+monitoring_python_internal_port: 5000
+monitoring_bonus_internal_port: 8080

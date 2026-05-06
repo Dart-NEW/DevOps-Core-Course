@@ -1,0 +1,6 @@
+$ kubectl get pods,svc -n lab12 -o wide
+NAME                                                    READY   STATUS    RESTARTS   AGE   IP            NODE                  NOMINATED NODE   READINESS GATES
+pod/lab12-devops-devops-info-service-666b4d8b78-4vh6p   1/1     Running   0          58s   10.244.0.15   lab09-control-plane   <none>           <none>
+
+NAME                                       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE     SELECTOR
+service/lab12-devops-devops-info-service   NodePort   10.96.234.180   <none>        80:30082/TCP   4d21h   app.kubernetes.io/instance=lab12-devops,app.kubernetes.io/name=devops-info-service

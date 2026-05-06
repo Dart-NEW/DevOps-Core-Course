@@ -1,0 +1,44 @@
+{{- if .Values.hooks.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-post-install" (include "devops-info-service.fullname" .) | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "devops-info-service.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": {{ .Values.hooks.postInstall.weight | quote }}
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        {{- include "devops-info-service.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: post-install-smoke-test
+          image: "{{ .Values.hooks.image.repository }}:{{ .Values.hooks.image.tag }}"
+          imagePullPolicy: {{ .Values.hooks.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              target_url="http://{{ include "devops-info-service.fullname" . }}:{{ .Values.service.port }}/health"
+              echo "Running smoke test against ${target_url}"
+              for attempt in $(seq 1 {{ .Values.hooks.postInstall.retries }}); do
+                if wget -qO- "${target_url}" >/tmp/health.json; then
+                  cat /tmp/health.json
+                  echo
+                  echo "Smoke test passed on attempt ${attempt}"
+                  sleep {{ .Values.hooks.postInstall.successSleepSeconds }}
+                  exit 0
+                fi
+                echo "Service not ready yet (${attempt}/{{ .Values.hooks.postInstall.retries }})"
+                sleep {{ .Values.hooks.postInstall.retrySleepSeconds }}
+              done
+              echo "Smoke test failed"
+              exit 1
+{{- end }}
