@@ -1,0 +1,5 @@
+$ kubectl exec -n lab12 lab12-devops-devops-info-service-666b4d8b78-4vh6p -- python generate 3 visits then GET /visits
+{
+  "visits": 9,
+  "path": "/data/visits"
+}

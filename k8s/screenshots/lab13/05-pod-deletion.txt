@@ -1,0 +1,17 @@
+# Pod deletion test
+2026-04-26T17:35:47+03:00
+POD=devops-info-service-dev-867dc55bdf-f6gbt
+NAME                                       READY   STATUS        RESTARTS   AGE     IP            NODE                  NOMINATED NODE   READINESS GATES
+devops-info-service-dev-867dc55bdf-f6gbt   0/1     Terminating   0          20s     10.244.0.51   lab09-control-plane   <none>           <none>
+devops-info-service-dev-867dc55bdf-fljfr   0/1     Terminating   0          20s     10.244.0.50   lab09-control-plane   <none>           <none>
+devops-info-service-dev-867dc55bdf-lb5m6   1/1     Running       0          4m58s   10.244.0.32   lab09-control-plane   <none>           <none>
+devops-info-service-dev-867dc55bdf-t9tpx   0/1     Terminating   0          20s     10.244.0.49   lab09-control-plane   <none>           <none>
+devops-info-service-dev-867dc55bdf-x5fm7   0/1     Terminating   0          20s     10.244.0.48   lab09-control-plane   <none>           <none>
+$ kubectl delete pod -n dev $POD
+pod "devops-info-service-dev-867dc55bdf-f6gbt" deleted from dev namespace
+$ kubectl wait --for=condition=ready pod -n dev -l app.kubernetes.io/instance=devops-info-service-dev --timeout=180s
+pod/devops-info-service-dev-867dc55bdf-lb5m6 condition met
+2026-04-26T17:36:02+03:00
+NAME                                       READY   STATUS    RESTARTS   AGE     IP            NODE                  NOMINATED NODE   READINESS GATES
+devops-info-service-dev-867dc55bdf-lb5m6   1/1     Running   0          5m12s   10.244.0.32   lab09-control-plane   <none>           <none>
+# This is Kubernetes Deployment/ReplicaSet self-healing, not ArgoCD drift correction.

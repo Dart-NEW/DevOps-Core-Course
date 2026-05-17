@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "devops-info-service.configEnvName" . }}
+  labels:
+    {{- include "devops-info-service.labels" . | nindent 4 }}
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  APP_ENV: {{ .Values.appEnv | quote }}
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  APP_CONFIG_PATH: {{ .Values.config.mountFile | quote }}
+  VISITS_FILE: {{ .Values.persistence.visitsFile | quote }}
+  FEATURE_VISITS_COUNTER: {{ ternary "true" "false" .Values.features.visitsCounter | quote }}

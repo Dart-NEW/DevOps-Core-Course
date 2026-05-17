@@ -1,0 +1,14 @@
+$ kubectl exec -n lab12 lab12-devops-devops-info-service-666b4d8b78-4vh6p -- cat /config/config.json
+{
+  "appName": "devops-info-service",
+  "environment": "kubernetes",
+  "features": {
+    "visitsCounter": true,
+    "metricsEnabled": true,
+    "structuredLogging": true
+  },
+  "settings": {
+    "welcomeMessage": "DevOps Info Service is running",
+    "runtimeTimezone": "UTC"
+  }
+}

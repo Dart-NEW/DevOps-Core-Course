@@ -1,0 +1,35 @@
+{{- if .Values.hooks.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-pre-install" (include "devops-info-service.fullname" .) | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "devops-info-service.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": {{ .Values.hooks.preInstall.weight | quote }}
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        {{- include "devops-info-service.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pre-install-validation
+          image: "{{ .Values.hooks.image.repository }}:{{ .Values.hooks.image.tag }}"
+          imagePullPolicy: {{ .Values.hooks.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              echo "Validating release {{ .Release.Name }} in namespace {{ .Release.Namespace }}"
+              test {{ .Values.replicaCount }} -gt 0
+              test {{ .Values.service.port }} -gt 0
+              echo "Using image {{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              sleep {{ .Values.hooks.preInstall.sleepSeconds }}
+              echo "Pre-install validation completed"
+{{- end }}
