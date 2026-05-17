@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+
+# Pulumi state and stack config
+Pulumi.*.yaml
+!Pulumi.dev.yaml.example
+
+# Local runtime files
+.pulumi/
