@@ -1,0 +1,9 @@
+Release {{ .Release.Name }} is ready in namespace {{ .Release.Namespace }}.
+
+Useful commands:
+  helm get values {{ .Release.Name }} -n {{ .Release.Namespace }}
+  kubectl get all -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+  kubectl port-forward -n {{ .Release.Namespace }} service/{{ include "devops-info-service-go.fullname" . }} 8081:{{ .Values.service.port }}
+
+Health check:
+  curl http://127.0.0.1:8081/health

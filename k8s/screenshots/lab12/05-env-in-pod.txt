@@ -1,0 +1,6 @@
+$ kubectl exec -n lab12 lab12-devops-devops-info-service-666b4d8b78-4vh6p -- printenv | grep APP_/LOG_LEVEL/VISITS_FILE/FEATURE_VISITS_COUNTER
+APP_CONFIG_PATH=/config/config.json
+APP_ENV=development
+FEATURE_VISITS_COUNTER=true
+LOG_LEVEL=debug
+VISITS_FILE=/data/visits

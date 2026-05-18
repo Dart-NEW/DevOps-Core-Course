@@ -1,0 +1,8 @@
+config:
+  lab04-pulumi:projectName: devops-core
+  lab04-pulumi:zone: ru-central1-a
+  lab04-pulumi:subnetCidr: 10.10.0.0/24
+  lab04-pulumi:allowedSshCidr: <your-public-ip>/32
+  lab04-pulumi:sshUsername: ubuntu
+  lab04-pulumi:sshPublicKey: ssh-ed25519 AAAA... your-key
+  lab04-pulumi:imageFamily: ubuntu-2404-lts

@@ -1,0 +1,77 @@
+replicaCount: 1
+
+env:
+  - name: HOST
+    value: "0.0.0.0"
+  - name: PORT
+    value: "5000"
+  - name: DEBUG
+    value: "true"
+
+appEnv: "development"
+logLevel: "debug"
+
+persistence:
+  enabled: true
+  size: 100Mi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+  mountPath: /data
+  visitsFile: /data/visits
+
+secrets:
+  username: "dev-user"
+  password: "dev-password"
+  apiKey: "dev-api-key"
+
+vault:
+  enabled: true
+  role: "devops-info-service"
+  secretPath: "secret/devops-info-service/config"
+  template:
+    enabled: true
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30081
+  sessionAffinity: None
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+    scheme: HTTP
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+    scheme: HTTP
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+    scheme: HTTP
+  initialDelaySeconds: 0
+  periodSeconds: 2
+  timeoutSeconds: 3
+  failureThreshold: 20
