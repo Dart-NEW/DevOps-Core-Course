@@ -1,0 +1,174 @@
+replicaCount: 3
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: devops-info-service-python
+  tag: lab12
+  pullPolicy: IfNotPresent
+
+containerPort: 5000
+
+env:
+  - name: HOST
+    value: "0.0.0.0"
+  - name: PORT
+    value: "5000"
+  - name: DEBUG
+    value: "false"
+
+appEnv: "production"
+logLevel: "info"
+
+config:
+  mountDir: /config
+  mountFile: /config/config.json
+
+features:
+  visitsCounter: true
+
+persistence:
+  enabled: true
+  size: 100Mi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+  mountPath: /data
+  visitsFile: /data/visits
+
+secrets:
+  username: "change-me"
+  password: "change-me"
+  apiKey: "change-me"
+
+vault:
+  enabled: false
+  role: "devops-info-service"
+  secretPath: "secret/devops-info-service/config"
+  template:
+    enabled: false
+
+commonLabels:
+  app.kubernetes.io/part-of: devops-course
+
+podAnnotations: {}
+podLabels:
+  version: "1.0.0"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+statefulset:
+  enabled: false
+  podManagementPolicy: OrderedReady
+  revisionHistoryLimit: 3
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
+rollout:
+  enabled: false
+  strategy: canary
+  revisionHistoryLimit: 3
+  canary:
+    pauseDuration: 30s
+  blueGreen:
+    autoPromotionEnabled: false
+    scaleDownDelaySeconds: 30
+    previewService:
+      type: NodePort
+      nodePort: null
+  analysis:
+    enabled: false
+    interval: 10s
+    count: 3
+    failureLimit: 1
+    successCondition: result == "healthy"
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30081
+  sessionAffinity: None
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+    scheme: HTTP
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+    scheme: HTTP
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+    scheme: HTTP
+  initialDelaySeconds: 0
+  periodSeconds: 2
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+terminationGracePeriodSeconds: 30
+
+podAntiAffinity:
+  enabled: true
+  weight: 100
+  topologyKey: kubernetes.io/hostname
+
+scratchVolume:
+  enabled: true
+  mountPath: /tmp
+
+hooks:
+  enabled: true
+  image:
+    repository: busybox
+    tag: "1.36.1"
+    pullPolicy: IfNotPresent
+  preInstall:
+    weight: -5
+    sleepSeconds: 3
+  postInstall:
+    weight: 5
+    retries: 20
+    retrySleepSeconds: 3
+    successSleepSeconds: 10

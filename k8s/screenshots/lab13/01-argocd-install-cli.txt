@@ -1,0 +1,28 @@
+$ helm list -n argocd
+NAME  	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART        	APP VERSION
+argocd	argocd   	2       	2026-04-26 17:26:03.897080142 +0300 MSK	deployed	argo-cd-9.5.4	v3.3.8     
+
+$ kubectl get pods -n argocd
+NAME                                               READY   STATUS    RESTARTS   AGE
+argocd-application-controller-0                    1/1     Running   0          17m
+argocd-applicationset-controller-867bf759b-c7fxm   1/1     Running   0          17m
+argocd-dex-server-57cd8b94d7-92jrm                 1/1     Running   0          14m
+argocd-notifications-controller-54c5d69ddd-9knzv   1/1     Running   0          17m
+argocd-redis-55b9d449f5-psgg6                      1/1     Running   0          15m
+argocd-repo-server-778448bd47-csjls                1/1     Running   0          17m
+argocd-server-5c9c5d567f-n9wdq                     1/1     Running   0          17m
+
+$ .tools/argocd version --client
+argocd: v3.3.8+7ae7d2c
+  BuildDate: 2026-04-21T17:45:55Z
+  GitCommit: 7ae7d2cc723f5408b080a31263e705198af08613
+  GitTreeState: clean
+  GoVersion: go1.25.5
+  Compiler: gc
+  Platform: linux/amd64
+
+$ .tools/argocd account get-user-info
+Logged In: true
+Username: admin
+Issuer: argocd
+Groups: 

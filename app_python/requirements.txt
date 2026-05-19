@@ -1,0 +1,8 @@
+# Web Framework
+Flask==3.1.0
+
+# Metrics
+prometheus-client==0.23.1
+
+# System Information (optional, for better Linux platform detection)
+distro==1.9.0

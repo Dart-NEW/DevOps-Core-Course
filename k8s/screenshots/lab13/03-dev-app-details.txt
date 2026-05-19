@@ -1,0 +1,23 @@
+$ .tools/argocd app get devops-info-service-dev
+Name:               argocd/devops-info-service-dev
+Project:            default
+Server:             https://kubernetes.default.svc
+Namespace:          dev
+URL:                https://argocd.example.com/applications/devops-info-service-dev
+Source:
+- Repo:             https://github.com/Dart-NEW/DevOps-Core-Course.git
+  Target:           lab12
+  Path:             k8s/devops-info-service
+  Helm Values:      values-dev.yaml
+SyncWindow:         Sync Allowed
+Sync Policy:        Automated (Prune)
+Sync Status:        Synced to lab12 (c8709b5)
+Health Status:      Healthy
+
+GROUP  KIND                   NAMESPACE  NAME                                 STATUS  HEALTH   HOOK  MESSAGE
+       ConfigMap              dev        devops-info-service-dev-env          Synced                 configmap/devops-info-service-dev-env configured
+       ConfigMap              dev        devops-info-service-dev-config       Synced                 
+       PersistentVolumeClaim  dev        devops-info-service-dev-data         Synced  Healthy        
+       Secret                 dev        devops-info-service-dev-app-secrets  Synced                 
+       Service                dev        devops-info-service-dev              Synced  Healthy        
+apps   Deployment             dev        devops-info-service-dev              Synced  Healthy        

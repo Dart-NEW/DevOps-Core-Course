@@ -1,0 +1,46 @@
+replicaCount: 5
+
+image:
+  repository: devops-info-service-python
+  tag: lab12
+  pullPolicy: IfNotPresent
+
+appEnv: "canary"
+logLevel: "debug"
+
+podLabels:
+  version: "canary-v1"
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30086
+  sessionAffinity: None
+  annotations: {}
+
+persistence:
+  enabled: true
+  size: 100Mi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+  mountPath: /data
+  visitsFile: /data/visits
+
+podAntiAffinity:
+  enabled: false
+
+hooks:
+  enabled: false
+
+rollout:
+  enabled: true
+  strategy: canary
+  revisionHistoryLimit: 3
+  canary:
+    pauseDuration: 30s
+  analysis:
+    enabled: true
+    interval: 5s
+    count: 2
+    failureLimit: 1
+    successCondition: result == "healthy"
